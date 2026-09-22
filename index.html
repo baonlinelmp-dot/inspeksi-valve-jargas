@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>V24 - Form Inspeksi Visual Ball Valve Online + jsPDF Fix</title>
+<title>V25 - Form Inspeksi Visual Ball Valve Online + PDF Libraries Fix</title>
 <style>
 *{box-sizing:border-box}body{margin:0;background:#eef1f4;font-family:Arial,sans-serif;color:#111}
 .page{max-width:1200px;margin:16px auto;background:#fff;padding:16px;box-shadow:0 1px 8px #bbb}
@@ -93,6 +93,7 @@ align-items:center;justify-content:center;margin-right:6px;font-size:14px;line-h
   .page2 .sig img{max-height:45px!important}
 }
 </style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
@@ -319,8 +320,10 @@ async function waitReportImages_(){
 }
 
 async function generatePreviewPdf_(){
- if(typeof html2canvas==="undefined" || !window.jspdf)
-   throw new Error("Library PDF belum termuat. Refresh halaman dan pastikan internet aktif.");
+ if(typeof html2canvas==="undefined")
+   throw new Error("html2canvas belum termuat.");
+ if(!window.jspdf)
+   throw new Error("jsPDF belum termuat.");
 
  build();
  await waitReportImages_();
