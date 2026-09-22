@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>V25 - Form Inspeksi Visual Ball Valve Online + PDF Libraries Fix</title>
+<title>V26 - Form Inspeksi Visual Ball Valve Online + PDF Preflight</title>
 <style>
 *{box-sizing:border-box}body{margin:0;background:#eef1f4;font-family:Arial,sans-serif;color:#111}
 .page{max-width:1200px;margin:16px auto;background:#fff;padding:16px;box-shadow:0 1px 8px #bbb}
@@ -349,7 +349,7 @@ async function generatePreviewPdf_(){
    // Capture SATU elemen report-page saja, sehingga tidak bisa terpotong
    // menjadi halaman tambahan oleh html2pdf.
    const canvas=await html2canvas(el,{
-    scale:1.7,
+    scale:1.25,
     useCORS:true,
     backgroundColor:"#ffffff",
     logging:false,
@@ -358,7 +358,7 @@ async function generatePreviewPdf_(){
     windowWidth:Math.max(document.documentElement.clientWidth, el.scrollWidth)
    });
 
-   const img=canvas.toDataURL("image/jpeg",0.92);
+   const img=canvas.toDataURL("image/jpeg",0.78);
    const ratio=Math.min(maxW/canvas.width,maxH/canvas.height);
    const w=canvas.width*ratio, h=canvas.height*ratio;
    const x=(pageW-w)/2, y=margin;
@@ -392,37 +392,50 @@ async function saveOnline(){
  const b=document.getElementById("saveOnline"),old=b.textContent;
  b.disabled=true;
  try{
-  const inspectionId=makeClientId_();
+  // V26: PDF WAJIB berhasil dibuat dahulu.
+  // Dengan demikian tidak ada row MENUNGGU PDF akibat kegagalan capture/library.
+  b.textContent="1/4 Memeriksa PDF...";
+  if(typeof html2canvas==="undefined") throw new Error("html2canvas tidak aktif");
+  if(!window.jspdf) throw new Error("jsPDF tidak aktif");
 
-  b.textContent="1/2 Menyimpan data...";
+  b.textContent="2/4 Membuat PDF...";
+  const pdfBase64=await generatePreviewPdf_();
+  if(!pdfBase64 || !pdfBase64.startsWith("data:application/pdf")){
+   throw new Error("Hasil PDF tidak valid");
+  }
+
+  const pdfBytes=Math.round((pdfBase64.length*3)/4);
+  if(pdfBytes<5000) throw new Error("PDF terlalu kecil/kosong");
+  if(pdfBytes>12000000) throw new Error("PDF terlalu besar: "+(pdfBytes/1048576).toFixed(1)+" MB");
+
+  const inspectionId=makeClientId_();
+  const pdfName="LAPORAN_"+(V("assetid")||V("asset")||inspectionId)+"_"+(V("date")||"").replaceAll("-","")+".pdf";
+
+  b.textContent="3/4 Menyimpan data...";
   const dataPayload=await collectOnlineData();
   dataPayload.action="save_inspection";
   dataPayload.inspectionId=inspectionId;
   hiddenPost_(dataPayload,"gasDataFrame");
 
-  // V20: beri waktu lebih panjang agar foto/TTD selesai disimpan.
-  await new Promise(r=>setTimeout(r,8000));
+  // Tunggu proses foto/TTD/folder selesai.
+  await new Promise(r=>setTimeout(r,10000));
 
-  b.textContent="2/2 Membuat PDF...";
-  const pdfBase64=await generatePreviewPdf_();
-
-  b.textContent="2/2 Mengirim PDF...";
-  const pdfName="LAPORAN_"+(V("assetid")||V("asset")||inspectionId)+"_"+(V("date")||"").replaceAll("-","")+".pdf";
-  const pdfPayload={
+  b.textContent="4/4 Mengirim PDF "+(pdfBytes/1048576).toFixed(1)+" MB...";
+  hiddenPost_({
    action:"upload_pdf",
    inspectionId:inspectionId,
    pdfBase64:pdfBase64,
    pdfFilename:pdfName
-  };
+  },"gasPdfFrame");
 
-  // V23: kirim PDF hanya satu kali.
-  // Retry pencarian ID/folder dilakukan di server agar tidak terjadi race condition.
-  hiddenPost_(pdfPayload,"gasPdfFrame");
+  await new Promise(r=>setTimeout(r,7000));
 
-  await new Promise(r=>setTimeout(r,5000));
-  alert("Tahap data dan PDF sudah dikirim.\n\nID: "+inspectionId+"\n\nCek Sheet kolom Status dan PDF Laporan, lalu cek folder Drive.");
+  alert("Proses pengiriman selesai.\n\nID: "+inspectionId+
+        "\nUkuran PDF: "+(pdfBytes/1048576).toFixed(1)+" MB"+
+        "\n\nCek Status dan PDF Laporan di Sheet.");
  }catch(e){
-  alert("Proses belum selesai: "+e.message+"\n\nJika data sudah masuk Sheet, data utama tetap aman.");
+  alert("PDF/DATA BELUM DIKIRIM:\n"+e.message+
+        "\n\nTidak dibuat baris inspeksi baru jika PDF gagal dibuat.");
  }finally{
   b.disabled=false;b.textContent=old;
  }
