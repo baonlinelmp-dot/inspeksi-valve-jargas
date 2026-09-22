@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>V30 - Form Inspeksi Visual Ball Valve Online + Smart Upload Audit</title>
+<title>V31 - Inspeksi Valve Jargas Mobile PWA</title>
 <style>
 *{box-sizing:border-box}body{margin:0;background:#eef1f4;font-family:Arial,sans-serif;color:#111}
 .page{max-width:1200px;margin:16px auto;background:#fff;padding:16px;box-shadow:0 1px 8px #bbb}
@@ -146,6 +146,32 @@ align-items:center;justify-content:center;margin-right:6px;font-size:14px;line-h
 #report.pdf-mode .page2 h3{font-size:10px;margin:3px 0}
 #report.pdf-mode .page2 .sig img{max-height:45px!important}
 #report.pdf-mode .page2 .sig{font-size:9px}
+</style>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0b5f3c">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Inspeksi Valve Jargas">
+<link rel="manifest" href="./manifest.webmanifest">
+<link rel="apple-touch-icon" href="./icon-192.png">
+<style>
+/* V31 Mobile layer - tidak mengubah mesin V30 */
+@media (max-width: 768px){
+  body{margin:0!important;padding:10px!important;overflow-x:hidden}
+  .container,.wrap,main{max-width:100%!important;width:100%!important;box-sizing:border-box}
+  input,select,textarea,button{font-size:16px!important;max-width:100%;box-sizing:border-box}
+  input,select,textarea{min-height:44px}
+  button{min-height:48px;padding:10px 14px!important}
+  table{font-size:12px}
+  .table-wrap,.tableWrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+  canvas{max-width:100%!important;touch-action:none}
+  .photoGrid{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+  .photo img,.reportPhoto img{max-width:100%;height:auto}
+  #saveOnline{width:100%;margin:10px 0 0!important;position:sticky;bottom:8px;z-index:50}
+  #preview{width:100%;margin-top:8px}
+  #report{overflow-x:auto}
+}
 </style>
 </head>
 <body><div class="page">
@@ -528,4 +554,9 @@ window.addEventListener("DOMContentLoaded",()=>{
 });
 </script>
 
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));
+}
+</script>
 </body></html>
