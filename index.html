@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>V19 - Form Inspeksi Visual Ball Valve Online + PDF 2 Tahap</title>
+<title>V20 - Form Inspeksi Visual Ball Valve Online + PDF Retry</title>
 <style>
 *{box-sizing:border-box}body{margin:0;background:#eef1f4;font-family:Arial,sans-serif;color:#111}
 .page{max-width:1200px;margin:16px auto;background:#fff;padding:16px;box-shadow:0 1px 8px #bbb}
@@ -363,22 +363,29 @@ async function saveOnline(){
   dataPayload.inspectionId=inspectionId;
   hiddenPost_(dataPayload,"gasDataFrame");
 
-  // Beri waktu server membuat folder dan baris Sheet.
-  await new Promise(r=>setTimeout(r,3000));
+  // V20: beri waktu lebih panjang agar foto/TTD selesai disimpan.
+  await new Promise(r=>setTimeout(r,8000));
 
   b.textContent="2/2 Membuat PDF...";
   const pdfBase64=await generatePreviewPdf_();
 
   b.textContent="2/2 Mengirim PDF...";
   const pdfName="LAPORAN_"+(V("assetid")||V("asset")||inspectionId)+"_"+(V("date")||"").replaceAll("-","")+".pdf";
-  hiddenPost_({
+  const pdfPayload={
    action:"upload_pdf",
    inspectionId:inspectionId,
    pdfBase64:pdfBase64,
    pdfFilename:pdfName
-  },"gasPdfFrame");
+  };
 
-  await new Promise(r=>setTimeout(r,2500));
+  // Kirim ulang otomatis bila request pertama datang saat server masih sibuk.
+  hiddenPost_(pdfPayload,"gasPdfFrame1");
+  await new Promise(r=>setTimeout(r,5000));
+  hiddenPost_(pdfPayload,"gasPdfFrame2");
+  await new Promise(r=>setTimeout(r,5000));
+  hiddenPost_(pdfPayload,"gasPdfFrame3");
+
+  await new Promise(r=>setTimeout(r,3000));
   alert("Tahap data dan PDF sudah dikirim.\n\nID: "+inspectionId+"\n\nCek Sheet kolom Status dan PDF Laporan, lalu cek folder Drive.");
  }catch(e){
   alert("Proses belum selesai: "+e.message+"\n\nJika data sudah masuk Sheet, data utama tetap aman.");
