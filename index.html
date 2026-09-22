@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>V22 - Form Inspeksi Visual Ball Valve Online + PDF 2 Halaman</title>
+<title>V23 - Form Inspeksi Visual Ball Valve Online + PDF Stabil</title>
 <style>
 *{box-sizing:border-box}body{margin:0;background:#eef1f4;font-family:Arial,sans-serif;color:#111}
 .page{max-width:1200px;margin:16px auto;background:#fff;padding:16px;box-shadow:0 1px 8px #bbb}
@@ -411,14 +411,11 @@ async function saveOnline(){
    pdfFilename:pdfName
   };
 
-  // Kirim ulang otomatis bila request pertama datang saat server masih sibuk.
-  hiddenPost_(pdfPayload,"gasPdfFrame1");
-  await new Promise(r=>setTimeout(r,5000));
-  hiddenPost_(pdfPayload,"gasPdfFrame2");
-  await new Promise(r=>setTimeout(r,5000));
-  hiddenPost_(pdfPayload,"gasPdfFrame3");
+  // V23: kirim PDF hanya satu kali.
+  // Retry pencarian ID/folder dilakukan di server agar tidak terjadi race condition.
+  hiddenPost_(pdfPayload,"gasPdfFrame");
 
-  await new Promise(r=>setTimeout(r,3000));
+  await new Promise(r=>setTimeout(r,5000));
   alert("Tahap data dan PDF sudah dikirim.\n\nID: "+inspectionId+"\n\nCek Sheet kolom Status dan PDF Laporan, lalu cek folder Drive.");
  }catch(e){
   alert("Proses belum selesai: "+e.message+"\n\nJika data sudah masuk Sheet, data utama tetap aman.");
