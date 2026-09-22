@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>V21 - Form Inspeksi Visual Ball Valve Online + PDF Capture Fix</title>
+<title>V22 - Form Inspeksi Visual Ball Valve Online + PDF 2 Halaman</title>
 <style>
 *{box-sizing:border-box}body{margin:0;background:#eef1f4;font-family:Arial,sans-serif;color:#111}
 .page{max-width:1200px;margin:16px auto;background:#fff;padding:16px;box-shadow:0 1px 8px #bbb}
@@ -318,25 +318,52 @@ async function waitReportImages_(){
 }
 
 async function generatePreviewPdf_(){
- if(typeof html2pdf==="undefined") throw new Error("Library PDF belum termuat. Refresh halaman dan pastikan internet aktif.");
+ if(typeof html2canvas==="undefined" || !window.jspdf)
+   throw new Error("Library PDF belum termuat. Refresh halaman dan pastikan internet aktif.");
+
  build();
  await waitReportImages_();
+
  const report=document.getElementById("report");
+ const pages=[...report.querySelectorAll(".report-page")];
+ if(pages.length!==2) throw new Error("Preview harus terdiri dari tepat 2 halaman.");
+
  report.classList.add("pdf-mode");
  report.style.visibility="visible";
  report.style.opacity="1";
- // Tunggu browser selesai layout ulang sebelum html2canvas mengambil gambar.
  await new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)));
+
  try{
-  const opt={
-   margin:[5,5,5,5],
-   image:{type:"jpeg",quality:.92},
-   html2canvas:{scale:1.6,useCORS:true,backgroundColor:"#ffffff",logging:false},
-   jsPDF:{unit:"mm",format:"a4",orientation:"portrait"},
-   pagebreak:{mode:["css","legacy"],before:".page2"}
-  };
-  const blob=await html2pdf().set(opt).from(report).outputPdf("blob");
-  return await blobToDataUrl_(blob);
+  const {jsPDF}=window.jspdf;
+  const pdf=new jsPDF({orientation:"portrait",unit:"mm",format:"a4",compress:true});
+  const pageW=210, pageH=297, margin=5;
+  const maxW=pageW-(margin*2), maxH=pageH-(margin*2);
+
+  for(let i=0;i<pages.length;i++){
+   const el=pages[i];
+
+   // Capture SATU elemen report-page saja, sehingga tidak bisa terpotong
+   // menjadi halaman tambahan oleh html2pdf.
+   const canvas=await html2canvas(el,{
+    scale:1.7,
+    useCORS:true,
+    backgroundColor:"#ffffff",
+    logging:false,
+    scrollX:0,
+    scrollY:-window.scrollY,
+    windowWidth:Math.max(document.documentElement.clientWidth, el.scrollWidth)
+   });
+
+   const img=canvas.toDataURL("image/jpeg",0.92);
+   const ratio=Math.min(maxW/canvas.width,maxH/canvas.height);
+   const w=canvas.width*ratio, h=canvas.height*ratio;
+   const x=(pageW-w)/2, y=margin;
+
+   if(i>0) pdf.addPage("a4","portrait");
+   pdf.addImage(img,"JPEG",x,y,w,h,undefined,"FAST");
+  }
+
+  return pdf.output("datauristring");
  } finally {
   report.classList.remove("pdf-mode");
  }
