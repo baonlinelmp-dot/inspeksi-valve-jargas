@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>V20 - Form Inspeksi Visual Ball Valve Online + PDF Retry</title>
+<title>V21 - Form Inspeksi Visual Ball Valve Online + PDF Capture Fix</title>
 <style>
 *{box-sizing:border-box}body{margin:0;background:#eef1f4;font-family:Arial,sans-serif;color:#111}
 .page{max-width:1200px;margin:16px auto;background:#fff;padding:16px;box-shadow:0 1px 8px #bbb}
@@ -99,11 +99,13 @@ align-items:center;justify-content:center;margin-right:6px;font-size:14px;line-h
 /* V18 - mode khusus PDF agar mengikuti Preview/Print A4 Portrait */
 #report.pdf-mode{
   display:block!important;
-  position:absolute;
-  left:-10000px;
-  top:0;
+  position:relative!important;
+  left:auto!important;
+  top:auto!important;
   width:200mm;
+  max-width:none!important;
   background:#fff;
+  overflow:visible!important;
 }
 #report.pdf-mode .report-page{
   width:200mm;
@@ -321,6 +323,10 @@ async function generatePreviewPdf_(){
  await waitReportImages_();
  const report=document.getElementById("report");
  report.classList.add("pdf-mode");
+ report.style.visibility="visible";
+ report.style.opacity="1";
+ // Tunggu browser selesai layout ulang sebelum html2canvas mengambil gambar.
+ await new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)));
  try{
   const opt={
    margin:[5,5,5,5],
