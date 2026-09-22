@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>V12 - Form Inspeksi Visual Ball Valve</title>
+<title>V13 - Form Inspeksi Visual Ball Valve Online</title>
 <style>
 *{box-sizing:border-box}body{margin:0;background:#eef1f4;font-family:Arial,sans-serif;color:#111}
 .page{max-width:1200px;margin:16px auto;background:#fff;padding:16px;box-shadow:0 1px 8px #bbb}
@@ -204,4 +204,40 @@ function build(){
  document.getElementById("report").scrollIntoView({behavior:"smooth"});
 }
 document.getElementById("preview").onclick=build;document.getElementById("print").onclick=()=>{build();setTimeout(()=>window.print(),150)};
-</script></body></html>
+</script>
+<script>
+const API_URL="https://script.google.com/macros/s/AKfycbya0mXXhEIQw8xZQ8p97ExZi7fj-aafTRF5Rw457FV5R_QzQ1eF7kTbQu5obk_wzAxV4Q/exec";
+function collectOnlineData(){
+ const checklist=[...document.querySelectorAll("#body tr")].map(r=>{
+  const c=[...r.querySelectorAll(".cond")].find(x=>x.checked);
+  const a=[...r.querySelectorAll(".act")].find(x=>x.checked);
+  return {no:r.dataset.no||"",item:r.dataset.item||"",pemeriksaan:r.dataset.test||"",
+   kondisi:c?c.value:"",corrective_action:a?a.value:"",keterangan:r.querySelector(".remark")?.value||""};
+ });
+ const signatures=[...document.querySelectorAll("#sigs .sig")].map((d,i)=>({
+  tipe:sdef[i],nama:d.querySelector(".sn")?.value||"",jabatan:d.querySelector(".sj")?.value||"",
+  image:d.querySelector("canvas")?.toDataURL("image/png")||""
+ }));
+ const getPhotos=id=>[...document.querySelectorAll(id+" .photo .pi")].filter(x=>x.src&&x.src.startsWith("data:")).map(x=>x.src);
+ return {regional:V("regional"),area:V("area"),segment:V("segment"),asset:V("asset"),assetid:V("assetid"),
+ date:V("date"),formno:V("formno"),inspector:V("inspector"),notes:V("notes"),checklist,
+ photos:getPhotos("#photos"),correctivePhotos:getPhotos("#correctivePhotos"),signatures};
+}
+async function saveOnline(){
+ if(API_URL.includes("PASTE_APPS_SCRIPT")){alert("URL Apps Script belum dipasang.");return}
+ const b=document.getElementById("saveOnline"),old=b.textContent;b.disabled=true;b.textContent="Menyimpan...";
+ try{
+  const r=await fetch(API_URL,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify(collectOnlineData())});
+  const j=await r.json(); if(!j.ok) throw new Error(j.message||"Gagal menyimpan");
+  alert("Data berhasil disimpan.\nID Inspeksi: "+j.id);
+ }catch(e){alert("Gagal menyimpan online: "+e.message)}
+ finally{b.disabled=false;b.textContent=old}
+}
+window.addEventListener("DOMContentLoaded",()=>{
+ const p=document.getElementById("preview"); if(!p)return;
+ const b=document.createElement("button");b.id="saveOnline";b.type="button";b.textContent="Simpan Online";b.style.marginLeft="8px";b.onclick=saveOnline;
+ p.insertAdjacentElement("afterend",b);
+});
+</script>
+
+</body></html>
