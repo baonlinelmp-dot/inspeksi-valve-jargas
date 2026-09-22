@@ -427,7 +427,10 @@ async function buildExcelBlob_(){
   xc_(ws,"C1","PT. PGAS SOLUTION",{bold:true,size:11,align:"center"});xc_(ws,"C2",title,{bold:true,size:13,align:"center"});
   xc_(ws,"C3","PEKERJAAN PENGELOLAAN ASET JARGAS TAHUN 2026",{size:10,align:"center"});xc_(ws,"C4","AREA LAMPUNG",{bold:true,size:10,align:"center"});
   xc_(ws,"A5","No : "+(V("formno")||"I-GEN-104-2019/F.01."),{bold:true,size:8,align:"right"});
-  if(li!==null)ws.addImage(li,{tl:{col:.15,row:.25},ext:{width:125,height:46}});if(ri!==null)ws.addImage(ri,{tl:{col:9.05,row:.35},ext:{width:125,height:40}});
+  ws.getRow(1).height=20; ws.getRow(2).height=22; ws.getRow(3).height=18; ws.getRow(4).height=18; ws.getRow(5).height=16;
+  if(li!==null) ws.addImage(li,{tl:{col:.18,row:.34},ext:{width:118,height:40}});
+  // PGN Solution: proporsi asli dipertahankan dan disejajarkan dengan kop PDF
+  if(ri!==null) ws.addImage(ri,{tl:{col:9.02,row:.42},ext:{width:132,height:34}});
   return ws
  }
  const ws=base("Form Inspeksi","FORM INSPEKSI VISUAL BALL VALVE");
