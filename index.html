@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>V26 - Form Inspeksi Visual Ball Valve Online + PDF Preflight</title>
+<title>V27 - Form Inspeksi Visual Ball Valve Online + Optimasi Foto</title>
 <style>
 *{box-sizing:border-box}body{margin:0;background:#eef1f4;font-family:Arial,sans-serif;color:#111}
 .page{max-width:1200px;margin:16px auto;background:#fff;padding:16px;box-shadow:0 1px 8px #bbb}
@@ -262,7 +262,7 @@ document.getElementById("preview").onclick=build;document.getElementById("print"
 <script>
 const API_URL="https://script.google.com/macros/s/AKfycbya0mXXhEIQw8xZQ8p97ExZi7fj-aafTRF5Rw457FV5R_QzQ1eF7kTbQu5obk_wzAxV4Q/exec";
 
-function compressDataUrl(src,maxSide=1200,quality=.72){
+function compressDataUrl(src,maxSide=900,quality=.65){
  return new Promise(resolve=>{
   if(!src||!src.startsWith("data:image")) return resolve(src||"");
   const im=new Image();
@@ -280,6 +280,14 @@ function compressDataUrl(src,maxSide=1200,quality=.72){
 function makeClientId_(){
  const d=new Date(), p=n=>String(n).padStart(2,"0");
  return "IVJ-"+d.getFullYear()+p(d.getMonth()+1)+p(d.getDate())+"-"+p(d.getHours())+p(d.getMinutes())+p(d.getSeconds())+"-"+Math.random().toString(36).slice(2,6).toUpperCase();
+}
+
+
+function estimatePayloadMB_(obj){
+ try{
+  const s=JSON.stringify(obj);
+  return new Blob([s]).size/1048576;
+ }catch(e){ return 0; }
 }
 
 async function collectOnlineData(){
@@ -392,13 +400,11 @@ async function saveOnline(){
  const b=document.getElementById("saveOnline"),old=b.textContent;
  b.disabled=true;
  try{
-  // V26: PDF WAJIB berhasil dibuat dahulu.
-  // Dengan demikian tidak ada row MENUNGGU PDF akibat kegagalan capture/library.
-  b.textContent="1/4 Memeriksa PDF...";
+  b.textContent="1/5 Memeriksa PDF...";
   if(typeof html2canvas==="undefined") throw new Error("html2canvas tidak aktif");
   if(!window.jspdf) throw new Error("jsPDF tidak aktif");
 
-  b.textContent="2/4 Membuat PDF...";
+  b.textContent="2/5 Membuat PDF...";
   const pdfBase64=await generatePreviewPdf_();
   if(!pdfBase64 || !pdfBase64.startsWith("data:application/pdf")){
    throw new Error("Hasil PDF tidak valid");
@@ -406,21 +412,29 @@ async function saveOnline(){
 
   const pdfBytes=Math.round((pdfBase64.length*3)/4);
   if(pdfBytes<5000) throw new Error("PDF terlalu kecil/kosong");
-  if(pdfBytes>12000000) throw new Error("PDF terlalu besar: "+(pdfBytes/1048576).toFixed(1)+" MB");
+  if(pdfBytes>10000000)
+   throw new Error("PDF terlalu besar: "+(pdfBytes/1048576).toFixed(1)+" MB");
 
+  b.textContent="3/5 Mengompres foto...";
   const inspectionId=makeClientId_();
-  const pdfName="LAPORAN_"+(V("assetid")||V("asset")||inspectionId)+"_"+(V("date")||"").replaceAll("-","")+".pdf";
-
-  b.textContent="3/4 Menyimpan data...";
   const dataPayload=await collectOnlineData();
   dataPayload.action="save_inspection";
   dataPayload.inspectionId=inspectionId;
+
+  const dataMB=estimatePayloadMB_(dataPayload);
+  if(dataMB>18)
+   throw new Error("Data/foto terlalu besar: "+dataMB.toFixed(1)+" MB. Kurangi jumlah/ukuran foto.");
+
+  const pdfName="LAPORAN_"+(V("assetid")||V("asset")||inspectionId)+"_"+(V("date")||"").replaceAll("-","")+".pdf";
+
+  b.textContent="4/5 Mengirim data "+dataMB.toFixed(1)+" MB...";
   hiddenPost_(dataPayload,"gasDataFrame");
 
-  // Tunggu proses foto/TTD/folder selesai.
-  await new Promise(r=>setTimeout(r,10000));
+  // Foto/TTD dapat membutuhkan waktu lebih lama pada data besar.
+  const waitMs=Math.min(20000,9000+Math.round(dataMB*600));
+  await new Promise(r=>setTimeout(r,waitMs));
 
-  b.textContent="4/4 Mengirim PDF "+(pdfBytes/1048576).toFixed(1)+" MB...";
+  b.textContent="5/5 Mengirim PDF "+(pdfBytes/1048576).toFixed(1)+" MB...";
   hiddenPost_({
    action:"upload_pdf",
    inspectionId:inspectionId,
@@ -430,12 +444,13 @@ async function saveOnline(){
 
   await new Promise(r=>setTimeout(r,7000));
 
-  alert("Proses pengiriman selesai.\n\nID: "+inspectionId+
-        "\nUkuran PDF: "+(pdfBytes/1048576).toFixed(1)+" MB"+
+  alert("Pengiriman selesai.\n\nID: "+inspectionId+
+        "\nData/foto: "+dataMB.toFixed(1)+" MB"+
+        "\nPDF: "+(pdfBytes/1048576).toFixed(1)+" MB"+
         "\n\nCek Status dan PDF Laporan di Sheet.");
  }catch(e){
-  alert("PDF/DATA BELUM DIKIRIM:\n"+e.message+
-        "\n\nTidak dibuat baris inspeksi baru jika PDF gagal dibuat.");
+  alert("BELUM DIKIRIM:\n"+e.message+
+        "\n\nV27 menghentikan proses sebelum data berisiko gagal.");
  }finally{
   b.disabled=false;b.textContent=old;
  }
