@@ -440,7 +440,7 @@ async function buildExcelBlob_(){
  let last="";
  [...document.querySelectorAll("#body tr")].forEach(tr=>{
   const item=tr.dataset.item||"",first=item!==last;if(first)last=item;const cs=[...tr.querySelectorAll(".cond")],ac=[...tr.querySelectorAll(".act")];
-  const vals=[first?(tr.dataset.no||""):"",first?item:"",tr.dataset.test||"",...[0,1,2].map(i=>cs[i]?(cs[i].checked?"✓ ":"")+cs[i].value:""),...ac.map(x=>(x.checked?"✓ ":"")+x.value),tr.querySelector(".remark").value||""];
+  const vals=[first?(tr.dataset.no||""):"",first?item:"",tr.dataset.test||"",...[0,1,2].map(i=>cs[i]?(cs[i].checked?"☑ ":"☐ ")+cs[i].value:""),...ac.map(x=>(x.checked?"☑ ":"☐ ")+x.value),tr.querySelector(".remark").value||""];
   vals.forEach((v,i)=>xc_(ws,String.fromCharCode(65+i)+r,v,{align:i===0?"center":"left"}));ws.getRow(r).height=27;r++;
  });
  ws.mergeCells(`A${r}:K${r}`);xc_(ws,`A${r}`,"Catatan",{bold:true,fill:"FFD9EAF7"});r++;ws.mergeCells(`A${r}:K${r+2}`);xc_(ws,`A${r}`,V("notes"));r+=3;
@@ -453,7 +453,15 @@ async function buildExcelBlob_(){
   if(!ph.length){wd.mergeCells(`A${dr}:K${dr+3}`);xc_(wd,`A${dr}`,"Belum ada foto",{align:"center"});dr+=4}
   else for(let i=0;i<ph.length;i+=2){wd.mergeCells(`A${dr}:E${dr+7}`);wd.mergeCells(`G${dr}:K${dr+7}`);[0,1].forEach(j=>{const d=ph[i+j];if(!d)return;try{const id=wb.addImage({base64:d.querySelector(".pi").src,extension:"jpeg"});wd.addImage(id,{tl:{col:j===0?.25:6.25,row:dr-.65},ext:{width:250,height:145}})}catch(e){}});dr+=8}
  }
- wd.mergeCells(`A${dr}:K${dr}`);xc_(wd,`A${dr}`,"Catatan",{bold:true,fill:"FFD9EAF7"});dr++;wd.mergeCells(`A${dr}:K${dr+2}`);xc_(wd,`A${dr}`,V("notes"));
+ wd.mergeCells(`A${dr}:K${dr}`);xc_(wd,`A${dr}`,"Catatan",{bold:true,fill:"FFD9EAF7"});dr++;wd.mergeCells(`A${dr}:K${dr+2}`);xc_(wd,`A${dr}`,V("notes"));dr+=3;
+ // Tanda tangan juga ditampilkan pada Sheet Dokumentasi
+ [["A","E",0,.4],["G","K",1,6.4]].forEach(([s,e,i,col])=>{
+   wd.mergeCells(`${s}${dr}:${e}${dr}`);xc_(wd,`${s}${dr}`,i===0?"Disiapkan":"Disetujui",{bold:true,align:"center",fill:"FFD9EAF7"});
+   wd.mergeCells(`${s}${dr+1}:${e}${dr+1}`);xc_(wd,`${s}${dr+1}`,"Nama: "+(sigs[i]?.querySelector(".sn")?.value||""));
+   wd.mergeCells(`${s}${dr+2}:${e}${dr+2}`);xc_(wd,`${s}${dr+2}`,"Jabatan: "+(sigs[i]?.querySelector(".sj")?.value||""));
+   wd.mergeCells(`${s}${dr+3}:${e}${dr+6}`);xc_(wd,`${s}${dr+3}`,"");
+   try{const d=sigs[i]?.querySelector("canvas")?.toDataURL("image/png");if(d){const id=wb.addImage({base64:d,extension:"png"});wd.addImage(id,{tl:{col:col,row:dr+2.2},ext:{width:180,height:65}})}}catch(e){}
+ });
  return new Blob([await wb.xlsx.writeBuffer()],{type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"})
 }
 async function saveExcelLocal_(){try{const b=await buildExcelBlob_(),a=document.createElement("a");a.href=URL.createObjectURL(b);a.download="LAPORAN_INSPEKSI_"+(V("assetid")||"VALVE")+"_"+(V("date")||"").replaceAll("-","")+".xlsx";a.click();setTimeout(()=>URL.revokeObjectURL(a.href),3000)}catch(e){alert("Excel gagal dibuat:\\n"+e.message)}}
