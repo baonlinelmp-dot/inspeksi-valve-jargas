@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>V29 - Form Inspeksi Visual Ball Valve Online + Batch Stabil Audit</title>
+<title>V30 - Form Inspeksi Visual Ball Valve Online + Smart Upload Audit</title>
 <style>
 *{box-sizing:border-box}body{margin:0;background:#eef1f4;font-family:Arial,sans-serif;color:#111}
 .page{max-width:1200px;margin:16px auto;background:#fff;padding:16px;box-shadow:0 1px 8px #bbb}
@@ -388,6 +388,33 @@ function hiddenPost_(payload, frameName){
  setTimeout(()=>form.remove(),5000);
 }
 
+
+function getServerStatus_(inspectionId){
+ return new Promise((resolve,reject)=>{
+  const cb="gasStatus_"+Date.now()+"_"+Math.random().toString(36).slice(2);
+  const s=document.createElement("script");
+  const timer=setTimeout(()=>{cleanup();reject(new Error("Timeout status server"));},10000);
+  function cleanup(){clearTimeout(timer);try{delete window[cb]}catch(e){};s.remove();}
+  window[cb]=(data)=>{cleanup();resolve(data||{})};
+  s.onerror=()=>{cleanup();reject(new Error("Gagal membaca status server"))};
+  s.src=API_URL+"?action=status&id="+encodeURIComponent(inspectionId)+"&callback="+encodeURIComponent(cb)+"&_="+Date.now();
+  document.body.appendChild(s);
+ });
+}
+async function waitFinalStatus_(inspectionId,button){
+ for(let i=0;i<8;i++){
+  try{
+   const r=await getServerStatus_(inspectionId);
+   if(r.status){
+    button.textContent="Audit: "+r.status.substring(0,42);
+    if(r.status.includes("LENGKAP")||r.status.includes("PERLU RETRY")||r.status.startsWith("ERROR")) return r;
+   }
+  }catch(e){}
+  await new Promise(r=>setTimeout(r,2000));
+ }
+ return {status:"STATUS BELUM TERKONFIRMASI"};
+}
+
 async function saveOnline(){
  const b=document.getElementById("saveOnline"),old=b.textContent;
  b.disabled=true;
@@ -469,25 +496,20 @@ async function saveOnline(){
    },"gasSigFrame"+i);
   });
 
-  // Tunggu batch terakhir selesai lalu PDF dikirim sebagai finalizer/audit.
-  await new Promise(r=>setTimeout(r,4500));
-  b.textContent="6/6 Finalisasi PDF & audit...";
-  hiddenPost_({
-   action:"upload_pdf",
-   inspectionId:inspectionId,
-   pdfBase64:pdfBase64,
-   pdfFilename:pdfName,
-   expectedVisual:visual.length,
-   expectedCorrective:corrective.length
-  },"gasPdfFrame");
+  await new Promise(r=>setTimeout(r,3500));
+  b.textContent="6/6 Upload PDF...";
+  hiddenPost_({action:"upload_pdf",inspectionId:inspectionId,pdfBase64:pdfBase64,pdfFilename:pdfName},"gasPdfFrame");
+  await new Promise(r=>setTimeout(r,3500));
 
-  await new Promise(r=>setTimeout(r,7000));
+  b.textContent="Finalisasi server...";
+  hiddenPost_({action:"finalize",inspectionId:inspectionId,expectedVisual:visual.length,expectedCorrective:corrective.length},"gasFinalizeFrame");
 
-  alert("Pengiriman selesai.\n\nID: "+inspectionId+
+  const final=await waitFinalStatus_(inspectionId,b);
+  alert("PROSES SELESAI\n\nID: "+inspectionId+
         "\nFoto Visual: "+visual.length+
         "\nFoto Corrective: "+corrective.length+
-        "\nTotal foto: "+(visual.length+corrective.length)+
-        "\n\nCek Status dan PDF Laporan di Sheet.");
+        "\n\nSTATUS SERVER:\n"+(final.status||"Belum terkonfirmasi")+
+        "\n\nJika PERLU RETRY, nomor V/C menunjukkan foto yang gagal.");
  }catch(e){
   alert("PROSES BERHENTI:\n"+e.message+
         "\n\nJika row sudah terbentuk, cek kolom Status untuk melihat tahap terakhir.");
