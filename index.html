@@ -422,7 +422,7 @@ async function buildExcelBlob_(){
  try{li=wb.addImage({base64:await urlToData_("./logo-pertamina-gas-negara.png"),extension:"png"});ri=wb.addImage({base64:await urlToData_("./logo-pgn-solution.png"),extension:"png"})}catch(e){}
  function base(name,title){
   const ws=wb.addWorksheet(name,{pageSetup:{paperSize:9,orientation:"portrait",fitToPage:true,fitToWidth:1,fitToHeight:1,margins:{left:.2,right:.2,top:.25,bottom:.25,header:.1,footer:.1}}});
-  ws.views=[{showGridLines:false}];[5,18,15,13,13,13,14,14,14,14,22].forEach((w,i)=>ws.getColumn(i+1).width=w);
+  ws.views=[{showGridLines:false}];[6,13,16,13,13,13,12,12,14,14,20].forEach((w,i)=>ws.getColumn(i+1).width=w);
   ws.mergeCells("A1:B4");ws.mergeCells("C1:I1");ws.mergeCells("C2:I2");ws.mergeCells("C3:I3");ws.mergeCells("C4:I4");ws.mergeCells("J1:K4");ws.mergeCells("A5:K5");
   xc_(ws,"C1","PT. PGAS SOLUTION",{bold:true,size:11,align:"center"});xc_(ws,"C2",title,{bold:true,size:13,align:"center"});
   xc_(ws,"C3","PEKERJAAN PENGELOLAAN ASET JARGAS TAHUN 2026",{size:10,align:"center"});xc_(ws,"C4","AREA LAMPUNG",{bold:true,size:10,align:"center"});
@@ -432,7 +432,14 @@ async function buildExcelBlob_(){
  }
  const ws=base("Form Inspeksi","FORM INSPEKSI VISUAL BALL VALVE");
  const ids=[["Regional",V("regional"),"Nama Aset",V("asset")],["Area",V("area"),"Aset ID",V("assetid")],["Segment/Section",V("segment"),"Tanggal",V("date")],["No. Form",V("formno"),"Petugas",V("inspector")]];
- let r=6;ids.forEach(x=>{ws.mergeCells(`B${r}:E${r}`);ws.mergeCells(`G${r}:K${r}`);xc_(ws,`A${r}`,x[0],{bold:true});xc_(ws,`B${r}`,x[1]);xc_(ws,`F${r}`,x[2],{bold:true});xc_(ws,`G${r}`,x[3]);r++});
+ let r=6;
+ ids.forEach(x=>{
+   ws.mergeCells(`A${r}:B${r}`); ws.mergeCells(`C${r}:F${r}`);
+   ws.mergeCells(`G${r}:H${r}`); ws.mergeCells(`I${r}:K${r}`);
+   xc_(ws,`A${r}`,x[0],{bold:true}); xc_(ws,`C${r}`,x[1]);
+   xc_(ws,`G${r}`,x[2],{bold:true}); xc_(ws,`I${r}`,x[3]);
+   ws.getRow(r).height=22; r++;
+ });
  ws.mergeCells(`A${r}:A${r+1}`);ws.mergeCells(`B${r}:B${r+1}`);ws.mergeCells(`C${r}:C${r+1}`);ws.mergeCells(`D${r}:F${r}`);ws.mergeCells(`G${r}:J${r}`);ws.mergeCells(`K${r}:K${r+1}`);
  [["A","No"],["B","Item"],["C","Pemeriksaan"],["D","Kondisi / Checklist"],["G","Correction Action / Checklist"],["K","Keterangan"]].forEach(x=>xc_(ws,x[0]+r,x[1],{bold:true,align:"center",fill:"FFD9EAF7"}));
  ["D","E","F"].forEach((c,i)=>xc_(ws,c+(r+1),["Pilihan 1","Pilihan 2","Pilihan 3"][i],{bold:true,align:"center",fill:"FFEAF2F8"}));
@@ -445,7 +452,28 @@ async function buildExcelBlob_(){
  });
  ws.mergeCells(`A${r}:K${r}`);xc_(ws,`A${r}`,"Catatan",{bold:true,fill:"FFD9EAF7"});r++;ws.mergeCells(`A${r}:K${r+2}`);xc_(ws,`A${r}`,V("notes"));r+=3;
  const sigs=[...document.querySelectorAll("#sigs .sig")];
- [["A","E",0,.4],["G","K",1,6.4]].forEach(([s,e,i,col])=>{ws.mergeCells(`${s}${r}:${e}${r}`);xc_(ws,`${s}${r}`,i===0?"Disiapkan":"Disetujui",{bold:true,align:"center",fill:"FFD9EAF7"});ws.mergeCells(`${s}${r+1}:${e}${r+1}`);xc_(ws,`${s}${r+1}`,"Nama: "+(sigs[i]?.querySelector(".sn")?.value||""));ws.mergeCells(`${s}${r+2}:${e}${r+2}`);xc_(ws,`${s}${r+2}`,"Jabatan: "+(sigs[i]?.querySelector(".sj")?.value||""));ws.mergeCells(`${s}${r+3}:${e}${r+6}`);xc_(ws,`${s}${r+3}`,"");try{const d=sigs[i]?.querySelector("canvas")?.toDataURL("image/png");if(d){const id=wb.addImage({base64:d,extension:"png"});ws.addImage(id,{tl:{col:col,row:r+2.2},ext:{width:180,height:65}})}}catch(e){}});
+ function excelSignatures_(sheet,startRow){
+   // Sama seperti preview PDF: judul -> TTD -> nama tebal -> jabatan
+   [["A","E",0,.35],["G","K",1,6.35]].forEach(([sc,ec,i,col])=>{
+     sheet.mergeCells(`${sc}${startRow}:${ec}${startRow}`);
+     xc_(sheet,`${sc}${startRow}`,i===0?"Disiapkan":"Disetujui",{bold:true,size:11,align:"center"});
+     sheet.mergeCells(`${sc}${startRow+1}:${ec}${startRow+4}`);
+     xc_(sheet,`${sc}${startRow+1}`,"",{align:"center"});
+     for(let rr=startRow+1;rr<=startRow+4;rr++) sheet.getRow(rr).height=20;
+     try{
+       const d=sigs[i]?.querySelector("canvas")?.toDataURL("image/png");
+       if(d){const id=wb.addImage({base64:d,extension:"png"});sheet.addImage(id,{tl:{col:col,row:startRow+.15},ext:{width:175,height:72}});}
+     }catch(e){}
+     sheet.mergeCells(`${sc}${startRow+5}:${ec}${startRow+5}`);
+     const nc=xc_(sheet,`${sc}${startRow+5}`,sigs[i]?.querySelector(".sn")?.value||"",{bold:true,size:10,align:"center"});
+     sheet.mergeCells(`${sc}${startRow+6}:${ec}${startRow+6}`);
+     xc_(sheet,`${sc}${startRow+6}`,sigs[i]?.querySelector(".sj")?.value||"",{size:10,align:"center"});
+   });
+   // spacer tengah seperti preview PDF
+   sheet.mergeCells(`F${startRow}:F${startRow+6}`);
+   return startRow+7;
+ }
+ r=excelSignatures_(ws,r);
  const wd=base("Dokumentasi","FORM DOKUMENTASI PEMELIHARAAN VALVE");let dr=6;
  for(const [title,sel] of [["Visual Inspection","#photos"],["Corrective Action","#correctivePhotos"]]){
   wd.mergeCells(`A${dr}:K${dr}`);xc_(wd,`A${dr}`,title,{bold:true,size:10,fill:"FFD9EAF7"});dr++;
@@ -454,14 +482,8 @@ async function buildExcelBlob_(){
   else for(let i=0;i<ph.length;i+=2){wd.mergeCells(`A${dr}:E${dr+7}`);wd.mergeCells(`G${dr}:K${dr+7}`);[0,1].forEach(j=>{const d=ph[i+j];if(!d)return;try{const id=wb.addImage({base64:d.querySelector(".pi").src,extension:"jpeg"});wd.addImage(id,{tl:{col:j===0?.25:6.25,row:dr-.65},ext:{width:250,height:145}})}catch(e){}});dr+=8}
  }
  wd.mergeCells(`A${dr}:K${dr}`);xc_(wd,`A${dr}`,"Catatan",{bold:true,fill:"FFD9EAF7"});dr++;wd.mergeCells(`A${dr}:K${dr+2}`);xc_(wd,`A${dr}`,V("notes"));dr+=3;
- // Tanda tangan juga ditampilkan pada Sheet Dokumentasi
- [["A","E",0,.4],["G","K",1,6.4]].forEach(([s,e,i,col])=>{
-   wd.mergeCells(`${s}${dr}:${e}${dr}`);xc_(wd,`${s}${dr}`,i===0?"Disiapkan":"Disetujui",{bold:true,align:"center",fill:"FFD9EAF7"});
-   wd.mergeCells(`${s}${dr+1}:${e}${dr+1}`);xc_(wd,`${s}${dr+1}`,"Nama: "+(sigs[i]?.querySelector(".sn")?.value||""));
-   wd.mergeCells(`${s}${dr+2}:${e}${dr+2}`);xc_(wd,`${s}${dr+2}`,"Jabatan: "+(sigs[i]?.querySelector(".sj")?.value||""));
-   wd.mergeCells(`${s}${dr+3}:${e}${dr+6}`);xc_(wd,`${s}${dr+3}`,"");
-   try{const d=sigs[i]?.querySelector("canvas")?.toDataURL("image/png");if(d){const id=wb.addImage({base64:d,extension:"png"});wd.addImage(id,{tl:{col:col,row:dr+2.2},ext:{width:180,height:65}})}}catch(e){}
- });
+ // Pengesahan Sheet Dokumentasi dibuat sama dengan Preview PDF
+ dr=excelSignatures_(wd,dr);
  return new Blob([await wb.xlsx.writeBuffer()],{type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"})
 }
 async function saveExcelLocal_(){try{const b=await buildExcelBlob_(),a=document.createElement("a");a.href=URL.createObjectURL(b);a.download="LAPORAN_INSPEKSI_"+(V("assetid")||"VALVE")+"_"+(V("date")||"").replaceAll("-","")+".xlsx";a.click();setTimeout(()=>URL.revokeObjectURL(a.href),3000)}catch(e){alert("Excel gagal dibuat:\\n"+e.message)}}
