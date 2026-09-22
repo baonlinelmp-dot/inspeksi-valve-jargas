@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>V31 - Inspeksi Valve Jargas Mobile PWA</title>
+<title>V31 - Inspeksi Valve Jargas Mobile PWA Tahap 2</title>
 <style>
 *{box-sizing:border-box}body{margin:0;background:#eef1f4;font-family:Arial,sans-serif;color:#111}
 .page{max-width:1200px;margin:16px auto;background:#fff;padding:16px;box-shadow:0 1px 8px #bbb}
@@ -173,6 +173,64 @@ align-items:center;justify-content:center;margin-right:6px;font-size:14px;line-h
   #report{overflow-x:auto}
 }
 </style>
+
+<style>
+/* V31 Tahap 2 - form input nyaman di HP. Preview/PDF tidak diubah. */
+@media (max-width:768px){
+ body{padding:0!important;background:#f2f4f7!important}
+ .page{width:100%!important;max-width:none!important;margin:0!important;padding:10px!important;box-shadow:none!important}
+ .editor .head{padding:10px 8px!important;border-width:1px!important}
+ .editor .head h2{font-size:18px!important;line-height:1.2!important}
+ .editor .head h3{font-size:14px!important}
+ .editor .head p,.editor .head b{font-size:12px!important}
+
+ /* Identitas menjadi kartu 1 kolom */
+ .editor>.identity,.editor>.identity tbody{display:block!important;width:100%!important}
+ .editor>.identity tr{display:grid!important;grid-template-columns:92px minmax(0,1fr)!important;width:100%!important}
+ .editor>.identity td{display:block!important;border:1px solid #d3d7dc!important;border-top:0!important;padding:7px!important;font-size:13px!important;background:#fff}
+ .editor>.identity tr:first-child td{border-top:1px solid #d3d7dc!important}
+ .editor>.identity td:nth-child(odd){font-weight:700;background:#f7f8fa!important}
+ .editor>.identity input{font-size:16px!important;min-height:38px!important;padding:6px!important;background:#fff}
+
+ /* Checklist tetap lengkap, tetapi bisa digeser horizontal dan kontrol diperbesar */
+ .editor>.scroll{width:100%!important;overflow-x:auto!important;-webkit-overflow-scrolling:touch!important;border:1px solid #cfd4da;background:#fff}
+ .editor>.scroll:before{content:"Geser tabel ke kanan/kiri untuk melihat seluruh checklist →";display:block;position:sticky;left:0;padding:7px 8px;font-size:12px;font-weight:700;background:#eaf4ef;color:#184d35;z-index:3}
+ .editor .form{min-width:980px!important}
+ .editor .form th,.editor .form td{font-size:13px!important;padding:7px 5px!important;line-height:1.25!important}
+ .editor .form th{position:sticky;top:0;z-index:2}
+ .editor .cb{width:26px!important;height:26px!important;margin-right:5px!important}
+ .editor .opt{min-height:34px!important;gap:5px!important}
+ .editor .remark{font-size:16px!important;min-height:38px!important}
+
+ .editor .section{margin-top:16px!important;padding:12px!important;background:#fff;border:1px solid #d8dde3;border-radius:10px}
+ .editor .section h3{font-size:17px!important;margin:4px 0 10px!important}
+ .editor textarea{font-size:16px!important;min-height:90px!important}
+
+ /* Foto 1 kolom agar tombol file/kamera mudah dipakai */
+ .editor .photoGrid{grid-template-columns:1fr!important;gap:10px!important}
+ .editor .photo{padding:10px!important;border-radius:8px!important}
+ .editor .photo input[type=file]{width:100%!important;font-size:15px!important}
+ .editor .photo img{max-height:260px!important}
+ #addPhoto,#addCorrectivePhoto{width:100%!important;min-height:48px!important;font-size:15px!important}
+
+ /* Tanda tangan bertumpuk */
+ .editor .sigGrid{grid-template-columns:1fr!important;gap:12px!important}
+ .editor .sig{padding:10px!important;border-radius:8px!important}
+ .editor .sig input{font-size:16px!important;min-height:44px!important}
+ .editor .sig canvas{height:180px!important;background:#fff!important}
+
+ /* Tombol aksi besar */
+ .editor>.btns{display:grid!important;grid-template-columns:1fr!important;gap:8px!important;margin:14px 0 90px!important}
+ .editor>.btns .btn{width:100%!important;min-height:50px!important;font-size:16px!important}
+ #saveOnline{position:static!important}
+ #preview{margin-top:0!important}
+
+ /* Preview tetap format laporan, tidak dipaksa menjadi form mobile */
+ #report{overflow-x:auto!important}
+ #report .report-page{min-width:200mm}
+}
+</style>
+
 </head>
 <body><div class="page">
 <div class="editor">
