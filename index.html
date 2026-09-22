@@ -1,0 +1,207 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>V12 - Form Inspeksi Visual Ball Valve</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#eef1f4;font-family:Arial,sans-serif;color:#111}
+.page{max-width:1200px;margin:16px auto;background:#fff;padding:16px;box-shadow:0 1px 8px #bbb}
+h1,h2,h3,p{margin:4px 0}.head{text-align:center;border:2px solid #111;padding:8px;margin-bottom:10px}
+.identity{width:100%;border-collapse:collapse;margin-bottom:10px}.identity td{border:1px solid #111;padding:5px;font-size:13px}.identity input{width:100%;border:0;padding:4px;font-size:13px}
+.scroll{overflow-x:auto}.form{border-collapse:collapse;width:100%;min-width:1050px}.form th,.form td{border:1px solid #111;padding:4px;font-size:12px;vertical-align:middle}.form th{text-align:center;background:#eee}.center{text-align:center}.item{font-weight:bold}
+.cb{width:20px;height:20px;vertical-align:middle;accent-color:#000}.opt{display:flex;align-items:center;gap:4px;min-height:26px}
+.remark{width:100%;min-width:130px;border:0;padding:5px}.section{margin-top:14px}.section textarea,.section input,.section select{width:100%;padding:7px;border:1px solid #777}
+.photoGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.sigGrid{display:grid;grid-template-columns:repeat(2,1fr);gap:18px}.photo,.sig{border:1px solid #111;padding:8px}.photo img{width:100%;max-height:220px;object-fit:contain;margin-top:5px}
+canvas{width:100%;height:130px;border:1px dashed #777;touch-action:none}
+.btns{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0}.btn{padding:10px 14px;border:1px solid #555;background:#eee;cursor:pointer}.primary{background:#173f6d;color:#fff}
+.report{display:none}.report.active{display:block}.small{font-size:11px;color:#555}.reportPhoto{text-align:center}.reportPhoto img{max-width:100%;max-height:250px}
+@media(max-width:760px){.page{margin:0;padding:8px}.photoGrid,.sigGrid{grid-template-columns:1fr}}
+@media print{
+.report-page{page-break-after:always}
+.report-page:last-child{page-break-after:auto}
+body{background:#fff}.editor,.btns{display:none!important}.page{box-shadow:none;margin:0;max-width:none}.report{display:block!important}.form{min-width:0}.form th,.form td{font-size:9px;padding:2px}}
+</style>
+
+<style>
+/* V10 - Preview follows the exact visual grouping of the input form */
+.report .form{table-layout:fixed;width:100%}
+.report .form th,.report .form td{vertical-align:middle}
+.report .item{font-weight:bold}
+.report .checkBox{display:inline-flex;width:18px;height:18px;border:1px solid #777;border-radius:2px;
+align-items:center;justify-content:center;margin-right:6px;font-size:14px;line-height:1}
+@page{size:A4 landscape;margin:7mm}
+@media print{
+  .report-page{page-break-after:always;width:100%;min-height:190mm}
+  .report-page:last-child{page-break-after:auto}
+  .page1 .form th,.page1 .form td{font-size:8.5px;padding:2px}
+  .page1 .identity td{font-size:9px;padding:3px}
+  .page1 .head{padding:4px;margin-bottom:5px}
+  .page1 .head h2{font-size:14px}.page1 .head h3{font-size:11px}
+}
+</style>
+
+<style>
+/* V11 - A4 Portrait, Form 1 = 2 sheets, Documentation = 1 sheet */
+@page{size:A4 portrait;margin:7mm}
+.sig canvas{height:100px}
+.sigGrid{gap:10px}
+.report .sig{padding:5px}
+.report .sig img{max-height:70px!important}
+.report .photoGrid{grid-template-columns:repeat(3,1fr);gap:6px}
+.report .photo{padding:4px}
+.report .reportPhoto img{max-height:125px}
+@media print{
+  .report-page{width:100%;min-height:0;page-break-after:always}
+  .report-page:last-child{page-break-after:auto}
+  .page1a .form th,.page1a .form td,.page1b .form th,.page1b .form td{font-size:8px;padding:2px}
+  .page1a .identity td,.page1b .identity td,.page2 .identity td{font-size:8.5px;padding:3px}
+  .page1a .head,.page1b .head,.page2 .head{padding:3px;margin-bottom:4px}
+  .page1a .head h2,.page1b .head h2,.page2 .head h2{font-size:13px}
+  .page1a .head h3,.page1b .head h3,.page2 .head h3{font-size:10px}
+  .page1a .form,.page1b .form{table-layout:fixed;width:100%}
+  .page1a .checkBox,.page1b .checkBox{width:13px;height:13px;font-size:10px;margin-right:3px}
+  .page2 .photoGrid{grid-template-columns:repeat(3,1fr);gap:4px}
+  .page2 .reportPhoto img{max-height:105px}
+  .page2 .section{margin-top:7px}
+  .page2 h3{font-size:10px;margin:3px 0}
+  .page2 .sig img{max-height:55px!important}
+  .page2 .sig{font-size:9px}
+}
+</style>
+
+
+<style>
+/* V12: total 2 pages — Form 1 one page + Documentation one page */
+@page{size:A4 portrait;margin:5mm}
+@media print{
+  .page1 .head{padding:2px;margin-bottom:3px}
+  .page1 .head h2{font-size:11px;margin:1px}
+  .page1 .head h3{font-size:9px;margin:1px}
+  .page1 .head p,.page1 .head b{font-size:8px}
+  .page1 .identity{margin-bottom:3px}
+  .page1 .identity td{font-size:7.2px;padding:1.5px}
+  .page1 .form th,.page1 .form td{font-size:6.6px;padding:1px;line-height:1.05}
+  .page1 .checkBox{width:10px;height:10px;font-size:8px;margin-right:2px}
+  .page1 .opt{min-height:12px;gap:1px}
+  .page1 .section{margin-top:3px;font-size:7px}
+  .page1 .section h3{font-size:8px;margin:2px 0}
+  .page1 .sigGrid{gap:5px}
+  .page1 .sig{padding:2px;font-size:7px}
+  .page1 .sig img{max-height:35px!important}
+  .page1 .sig div[style]{height:38px!important}
+  .page2 .reportPhoto img{max-height:95px}
+  .page2 .sig img{max-height:45px!important}
+}
+</style>
+</head>
+<body><div class="page">
+<div class="editor">
+<div class="head"><h3>PT. PGAS SOLUTION</h3><h2>FORM INSPEKSI VISUAL BALL VALVE</h2><p>PEKERJAAN PENGELOLAAN ASET JARGAS TAHUN 2026</p><b>AREA LAMPUNG</b></div>
+<table class="identity">
+<tr><td>Regional</td><td><input id="regional" value="SOR I"></td><td>Nama Aset</td><td><input id="asset" value="SV TM 02"></td></tr>
+<tr><td>Area</td><td><input id="area" value="Lampung"></td><td>Aset ID</td><td><input id="assetid" value="35132-LNV-006-BLV-180-150-006"></td></tr>
+<tr><td>Segment/Section</td><td><input id="segment" value="Sektor 13"></td><td>Tanggal</td><td><input id="date" type="date" value="2026-01-19"></td></tr>
+<tr><td>No. Form</td><td><input id="formno" value="I-GEN-104-2019/F.01."></td><td>Petugas</td><td><input id="inspector"></td></tr>
+</table>
+<div class="scroll"><table class="form"><thead><tr><th>No</th><th>Item</th><th>Pemeriksaan</th><th colspan="3">Kondisi / Checklist</th><th colspan="4">Correction Action / Checklist</th><th>Keterangan</th></tr></thead><tbody id="body"></tbody></table></div>
+<div class="section"><b>Catatan</b><textarea id="notes" rows="3">Pembersihan 5 R pada valve, stroke test, dan pengecekan kebocoran.</textarea></div>
+<div class="section"><h3>Dokumentasi</h3>
+<h3 style="font-size:14px">Visual Inspection (foto sesuai dengan item inspected)</h3>
+<div id="photos" class="photoGrid"></div><div class="btns"><button class="btn" id="addPhoto">+ Tambah Foto Visual Inspection</button></div>
+<h3 style="font-size:14px">Corrective Action (foto sesuai dengan item inspected)</h3>
+<div id="correctivePhotos" class="photoGrid"></div><div class="btns"><button class="btn" id="addCorrectivePhoto">+ Tambah Foto Corrective Action</button></div>
+</div>
+
+<div class="section"><h3>Pengesahan / Tanda Tangan</h3><div id="sigs" class="sigGrid"></div></div>
+<div class="btns"><button class="btn primary" id="preview">Preview Laporan</button><button class="btn" id="print">Print / Simpan PDF (A4 Portrait)</button><button class="btn" onclick="location.reload()">Reset</button></div>
+<p class="small">Mode simulasi lokal V12. Laporan dibagi 2 halaman seperti format Excel: checklist dan dokumentasi.</p>
+</div>
+<div id="report" class="report"><div class="report-page"></div></div>
+</div>
+<script>
+const data=[
+["Bak valve/Box valve (jika ada)",[["",["Baik","Rusak","Terendam"]]]],
+["Body",[["Korosi",["Tidak","Ya"]],["Kebocoran",["Tidak","Ya"]],["Deformasi",["Tidak","Ya"]]]],
+["Gearbox (Jika ada)",[["Paint",["Baik","Buruk"]],["Korosi",["Tidak","Ya"]],["Kebocoran",["Tidak","Ya"]],["Deformasi",["Tidak","Ya"]]]],
+["Handwheel/handle",[["Paint",["Baik","Buruk"]],["Korosi",["Tidak","Ya"]],["Deformasi",["Tidak","Ya"]]]],
+["Bolt/Nut",[["Korosi",["Tidak","Ya"]],["Longgar",["Tidak","Ya"]],["Deformasi",["Tidak","Ya"]]]],
+["Support (Jika ada)",[["Paint",["Baik","Buruk"]],["Korosi",["Tidak","Ya"]],["Deformasi",["Tidak","Ya"]]]],
+["Valve Status",[["Status",["Buka","Tutup"]]]],
+["Status Buka Tutup (Jika ada)",[["Kondisi",["Baik","Buruk"]]]],
+["Kondisi Tagging",[["Kondisi",["Baik","Buruk"]]]]
+];
+const acts=["Tidak ada","Perbaikan","Penggantian","Lain-lain"]; let seq=0;
+const body=document.getElementById("body");
+data.forEach((g,gi)=>g[1].forEach((t,ti)=>{
+ seq++;let tr=document.createElement("tr");tr.dataset.no=gi+1;tr.dataset.item=g[0];tr.dataset.test=t[0];
+ let cond=[0,1,2].map(j=>`<td>${t[1][j]?`<label class="opt"><input type="checkbox" class="cb cond" name="c${seq}" value="${t[1][j]}">${t[1][j]}</label>`:""}</td>`).join("");
+ let ac=acts.map(x=>`<td><label class="opt"><input type="checkbox" class="cb act" name="a${seq}" value="${x}">${x}</label></td>`).join("");
+ tr.innerHTML=`<td class="center">${ti==0?gi+1:""}</td><td class="item">${ti==0?g[0]:""}</td><td>${t[0]}</td>${cond}${ac}<td><input class="remark" placeholder="Keterangan"></td>`;body.appendChild(tr)
+}));
+document.querySelectorAll(".cb").forEach(x=>x.onchange=e=>{if(e.target.checked)document.querySelectorAll(`[name="${e.target.name}"]`).forEach(y=>{if(y!==e.target)y.checked=false})});
+let pc=0;function addPhoto(){pc++;let d=document.createElement("div");d.className="photo";d.innerHTML=`<b>Foto ${pc}</b><input class="pf" type="file" accept="image/*" capture="environment"><img class="pi" style="display:none"><button class="btn del" type="button">Hapus</button>`;document.getElementById("photos").appendChild(d);d.querySelector(".del").onclick=()=>d.remove();d.querySelector(".pf").onchange=e=>{let f=e.target.files[0];if(!f)return;let r=new FileReader;r.onload=()=>{d.querySelector(".pi").src=r.result;d.querySelector(".pi").style.display="block"};r.readAsDataURL(f)}} addPhoto();document.getElementById("addPhoto").onclick=addPhoto;
+let cpc=0;function addCorrectivePhoto(){cpc++;let d=document.createElement("div");d.className="photo";d.innerHTML=`<b>Foto ${cpc}</b><input class="pf" type="file" accept="image/*" capture="environment"><img class="pi" style="display:none"><button class="btn del" type="button">Hapus</button>`;document.getElementById("correctivePhotos").appendChild(d);d.querySelector(".del").onclick=()=>d.remove();d.querySelector(".pf").onchange=e=>{let f=e.target.files[0];if(!f)return;let r=new FileReader;r.onload=()=>{d.querySelector(".pi").src=r.result;d.querySelector(".pi").style.display="block"};r.readAsDataURL(f)}} addCorrectivePhoto();document.getElementById("addCorrectivePhoto").onclick=addCorrectivePhoto;
+const sdef=["Disiapkan","Disetujui"];
+sdef.forEach((title,i)=>{let d=document.createElement("div");d.className="sig";d.innerHTML=`<b>${title}</b><input class="sn" placeholder="Nama"><input class="sj" placeholder="Jabatan"><canvas width="500" height="180"></canvas><button type="button" class="btn clear">Hapus / Ulangi</button>`;document.getElementById("sigs").appendChild(d);let c=d.querySelector("canvas"),ctx=c.getContext("2d"),on=false;ctx.lineWidth=2;ctx.lineCap="round";function p(e){let r=c.getBoundingClientRect(),q=e.touches?e.touches[0]:e;return[(q.clientX-r.left)*c.width/r.width,(q.clientY-r.top)*c.height/r.height]}function st(e){on=true;ctx.beginPath();ctx.moveTo(...p(e));e.preventDefault()}function mv(e){if(on){ctx.lineTo(...p(e));ctx.stroke();e.preventDefault()}}c.onmousedown=st;c.onmousemove=mv;window.addEventListener("mouseup",()=>on=false);c.addEventListener("touchstart",st,{passive:false});c.addEventListener("touchmove",mv,{passive:false});c.addEventListener("touchend",()=>on=false);d.querySelector(".clear").onclick=()=>ctx.clearRect(0,0,c.width,c.height)});
+const V=id=>document.getElementById(id).value, E=s=>String(s||"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
+function build(){
+ const sourceRows=[...document.querySelectorAll("#body tr")];
+ let rows="", lastItem="";
+ sourceRows.forEach((r)=>{
+   const item=r.dataset.item||"";
+   const isFirst=item!==lastItem;
+   if(isFirst) lastItem=item;
+   const no=isFirst ? (r.dataset.no||"") : "";
+   const itemCell=isFirst ? E(item) : "";
+   const cs=[...r.querySelectorAll(".cond")], ac=[...r.querySelectorAll(".act")];
+   const chtml=[0,1,2].map(j=>`<td>${cs[j]?`<span class="opt"><span class="checkBox">${cs[j].checked?"✓":""}</span>${E(cs[j].value)}</span>`:""}</td>`).join("");
+   const ahtml=ac.map(x=>`<td><span class="opt"><span class="checkBox">${x.checked?"✓":""}</span>${E(x.value)}</span></td>`).join("");
+   rows+=`<tr><td class="center">${E(no)}</td><td class="item">${itemCell}</td><td>${E(r.dataset.test)}</td>${chtml}${ahtml}<td>${E(r.querySelector(".remark").value)}</td></tr>`;
+ });
+
+ let ph="";
+ document.querySelectorAll("#photos .photo").forEach(d=>{
+   const im=d.querySelector(".pi");
+   ph+=`<div class="photo reportPhoto">${im.src?`<img src="${im.src}">`:"<p>Belum ada foto</p>"}</div>`;
+ });
+ let cph="";
+ document.querySelectorAll("#correctivePhotos .photo").forEach(d=>{
+   const im=d.querySelector(".pi");
+   cph+=`<div class="photo reportPhoto">${im.src?`<img src="${im.src}">`:"<p>Belum ada foto</p>"}</div>`;
+ });
+
+ let sg="";
+ document.querySelectorAll("#sigs .sig").forEach((d,i)=>{
+   sg+=`<div class="sig center"><b>${sdef[i]}</b><div style="height:55px"><img src="${d.querySelector("canvas").toDataURL()}" style="max-height:50px;max-width:100%"></div><b>${E(d.querySelector(".sn").value)}</b><div>${E(d.querySelector(".sj").value)}</div></div>`;
+ });
+
+ const ident=`<table class="identity">
+ <tr><td>Regional</td><td>${E(V("regional"))}</td><td>Nama Aset</td><td>${E(V("asset"))}</td></tr>
+ <tr><td>Area</td><td>${E(V("area"))}</td><td>Aset ID</td><td>${E(V("assetid"))}</td></tr>
+ <tr><td>Segment/Section</td><td>${E(V("segment"))}</td><td>Tanggal</td><td>${E(V("date"))}</td></tr>
+ <tr><td>No. Form</td><td>${E(V("formno"))}</td><td>Petugas</td><td>${E(V("inspector"))}</td></tr></table>`;
+
+ const tableHead=`<thead><tr><th>No</th><th>Item</th><th>Pemeriksaan</th><th colspan="3">Kondisi / Checklist</th><th colspan="4">Correction Action / Checklist</th><th>Keterangan</th></tr></thead>`;
+ const head=`<div class="head"><h3>PT. PGAS SOLUTION</h3><h2>FORM INSPEKSI VISUAL BALL VALVE</h2><p>PEKERJAAN PENGELOLAAN ASET JARGAS TAHUN 2026</p><b>AREA LAMPUNG</b></div>`;
+
+ const page1=`<div class="report-page page1">${head}${ident}
+ <div class="scroll"><table class="form">${tableHead}<tbody>${rows}</tbody></table></div>
+ <div class="section"><b>Catatan</b><p>${E(V("notes"))}</p></div>
+ <div class="section"><h3>Pengesahan / Tanda Tangan</h3><div class="sigGrid">${sg}</div></div>
+ </div>`;
+
+ const page2=`<div class="report-page page2">
+ <div class="head"><h3>PT. PGAS SOLUTION</h3><h2>FORM DOKUMENTASI PEMELIHARAAN VALVE</h2><p>PEKERJAAN PENGELOLAAN ASET JARGAS TAHUN 2026</p><b>AREA LAMPUNG</b></div>
+ <table class="identity"><tr><td>Date of Inspection</td><td>${E(V("date"))}</td><td>Nama Aset</td><td>${E(V("asset"))}</td></tr><tr><td>Aset ID</td><td colspan="3">${E(V("assetid"))}</td></tr></table>
+ <h3>Visual Inspection (foto sesuai dengan item inspected)</h3><div class="photoGrid">${ph}</div>
+ <div class="section"><h3>Corrective Action (foto sesuai dengan item inspected)</h3><div class="photoGrid">${cph}</div></div>
+ <div class="section"><b>Catatan :</b><p>${E(V("notes"))}</p></div>
+ <div class="section"><h3>Pengesahan / Tanda Tangan</h3><div class="sigGrid">${sg}</div></div>
+ </div>`;
+
+ document.getElementById("report").innerHTML=page1+page2;
+ document.getElementById("report").classList.add("active");
+ document.getElementById("report").scrollIntoView({behavior:"smooth"});
+}
+document.getElementById("preview").onclick=build;document.getElementById("print").onclick=()=>{build();setTimeout(()=>window.print(),150)};
+</script></body></html>
