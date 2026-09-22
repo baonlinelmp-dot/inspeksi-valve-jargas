@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>V13 - Form Inspeksi Visual Ball Valve Online</title>
+<title>V14 - Form Inspeksi Visual Ball Valve Online</title>
 <style>
 *{box-sizing:border-box}body{margin:0;background:#eef1f4;font-family:Arial,sans-serif;color:#111}
 .page{max-width:1200px;margin:16px auto;background:#fff;padding:16px;box-shadow:0 1px 8px #bbb}
@@ -207,7 +207,21 @@ document.getElementById("preview").onclick=build;document.getElementById("print"
 </script>
 <script>
 const API_URL="https://script.google.com/macros/s/AKfycbya0mXXhEIQw8xZQ8p97ExZi7fj-aafTRF5Rw457FV5R_QzQ1eF7kTbQu5obk_wzAxV4Q/exec";
-function collectOnlineData(){
+function compressDataUrl(src,maxSide=1200,quality=.72){
+ return new Promise(resolve=>{
+  if(!src||!src.startsWith("data:image")) return resolve(src||"");
+  const im=new Image();
+  im.onload=()=>{
+   let w=im.width,h=im.height;
+   const s=Math.min(1,maxSide/Math.max(w,h)); w=Math.round(w*s);h=Math.round(h*s);
+   const c=document.createElement("canvas");c.width=w;c.height=h;
+   c.getContext("2d").drawImage(im,0,0,w,h);
+   resolve(c.toDataURL("image/jpeg",quality));
+  };
+  im.onerror=()=>resolve(src); im.src=src;
+ });
+}
+async function collectOnlineData(){
  const checklist=[...document.querySelectorAll("#body tr")].map(r=>{
   const c=[...r.querySelectorAll(".cond")].find(x=>x.checked);
   const a=[...r.querySelectorAll(".act")].find(x=>x.checked);
@@ -218,20 +232,29 @@ function collectOnlineData(){
   tipe:sdef[i],nama:d.querySelector(".sn")?.value||"",jabatan:d.querySelector(".sj")?.value||"",
   image:d.querySelector("canvas")?.toDataURL("image/png")||""
  }));
- const getPhotos=id=>[...document.querySelectorAll(id+" .photo .pi")].filter(x=>x.src&&x.src.startsWith("data:")).map(x=>x.src);
+ async function photos(id){
+  const a=[...document.querySelectorAll(id+" .photo .pi")].filter(x=>x.src&&x.src.startsWith("data:"));
+  return Promise.all(a.map(x=>compressDataUrl(x.src)));
+ }
  return {regional:V("regional"),area:V("area"),segment:V("segment"),asset:V("asset"),assetid:V("assetid"),
- date:V("date"),formno:V("formno"),inspector:V("inspector"),notes:V("notes"),checklist,
- photos:getPhotos("#photos"),correctivePhotos:getPhotos("#correctivePhotos"),signatures};
+  date:V("date"),formno:V("formno"),inspector:V("inspector"),notes:V("notes"),checklist,
+  photos:await photos("#photos"),correctivePhotos:await photos("#correctivePhotos"),signatures};
 }
 async function saveOnline(){
  if(API_URL.includes("PASTE_APPS_SCRIPT")){alert("URL Apps Script belum dipasang.");return}
- const b=document.getElementById("saveOnline"),old=b.textContent;b.disabled=true;b.textContent="Menyimpan...";
+ const b=document.getElementById("saveOnline"),old=b.textContent;b.disabled=true;b.textContent="Mengompres & mengirim...";
  try{
-  const r=await fetch(API_URL,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify(collectOnlineData())});
-  const j=await r.json(); if(!j.ok) throw new Error(j.message||"Gagal menyimpan");
-  alert("Data berhasil disimpan.\nID Inspeksi: "+j.id);
- }catch(e){alert("Gagal menyimpan online: "+e.message)}
- finally{b.disabled=false;b.textContent=old}
+  const payload=await collectOnlineData();
+  await fetch(API_URL,{
+   method:"POST",
+   mode:"no-cors",
+   headers:{"Content-Type":"text/plain;charset=utf-8"},
+   body:JSON.stringify(payload)
+  });
+  alert("Data sudah dikirim ke server.\nSilakan cek sheet INSPEKSI. Jika baris baru muncul, penyimpanan berhasil.");
+ }catch(e){
+  alert("Pengiriman gagal: "+e.message);
+ }finally{b.disabled=false;b.textContent=old}
 }
 window.addEventListener("DOMContentLoaded",()=>{
  const p=document.getElementById("preview"); if(!p)return;
