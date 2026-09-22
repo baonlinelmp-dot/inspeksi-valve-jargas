@@ -241,20 +241,50 @@ async function collectOnlineData(){
   photos:await photos("#photos"),correctivePhotos:await photos("#correctivePhotos"),signatures};
 }
 async function saveOnline(){
- if(API_URL.includes("PASTE_APPS_SCRIPT")){alert("URL Apps Script belum dipasang.");return}
- const b=document.getElementById("saveOnline"),old=b.textContent;b.disabled=true;b.textContent="Mengompres & mengirim...";
+ const b=document.getElementById("saveOnline"),old=b.textContent;
+ b.disabled=true;b.textContent="Mengompres & mengirim...";
  try{
   const payload=await collectOnlineData();
-  await fetch(API_URL,{
-   method:"POST",
-   mode:"no-cors",
-   headers:{"Content-Type":"text/plain;charset=utf-8"},
-   body:JSON.stringify(payload)
-  });
-  alert("Data sudah dikirim ke server.\nSilakan cek sheet INSPEKSI. Jika baris baru muncul, penyimpanan berhasil.");
+
+  // Hidden iframe agar halaman aplikasi tidak berpindah ke Apps Script.
+  let iframe=document.getElementById("gasPostFrame");
+  if(!iframe){
+   iframe=document.createElement("iframe");
+   iframe.id="gasPostFrame";
+   iframe.name="gasPostFrame";
+   iframe.style.display="none";
+   document.body.appendChild(iframe);
+  }
+
+  // Form POST biasa tidak terkena pembatasan CORS seperti fetch().
+  const form=document.createElement("form");
+  form.method="POST";
+  form.action=API_URL;
+  form.target="gasPostFrame";
+  form.style.display="none";
+
+  const input=document.createElement("input");
+  input.type="hidden";
+  input.name="payload";
+  input.value=JSON.stringify(payload);
+
+  form.appendChild(input);
+  document.body.appendChild(form);
+  form.submit();
+
+  // Karena cross-origin iframe tidak boleh dibaca oleh GitHub,
+  // konfirmasi akhir dilakukan dengan melihat baris baru di Sheet.
+  setTimeout(()=>{
+   form.remove();
+   b.disabled=false;
+   b.textContent=old;
+   alert("Data telah dikirim ke Apps Script.\n\nSekarang cek sheet INSPEKSI. Jika baris baru muncul, koneksi GitHub → Apps Script sudah berhasil.");
+  },1500);
+
  }catch(e){
-  alert("Pengiriman gagal: "+e.message);
- }finally{b.disabled=false;b.textContent=old}
+  b.disabled=false;b.textContent=old;
+  alert("Gagal menyiapkan data: "+e.message);
+ }
 }
 window.addEventListener("DOMContentLoaded",()=>{
  const p=document.getElementById("preview"); if(!p)return;
