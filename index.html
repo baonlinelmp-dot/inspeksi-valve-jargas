@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>V28 - Form Inspeksi Visual Ball Valve Online + 16 Foto Batch</title>
+<title>V29 - Form Inspeksi Visual Ball Valve Online + Batch Stabil Audit</title>
 <style>
 *{box-sizing:border-box}body{margin:0;background:#eef1f4;font-family:Arial,sans-serif;color:#111}
 .page{max-width:1200px;margin:16px auto;background:#fff;padding:16px;box-shadow:0 1px 8px #bbb}
@@ -436,41 +436,49 @@ async function saveOnline(){
   if(visual.length>8 || corrective.length>8)
     throw new Error("Maksimum 8 foto Visual + 8 foto Corrective (16 foto).");
 
-  for(let i=0;i<media.length;i++){
-   b.textContent="4/6 Upload foto "+(i+1)+"/"+media.length;
-   hiddenPost_({
-    action:"upload_media",
-    inspectionId:inspectionId,
-    kind:media[i].kind,
-    index:media[i].index,
-    dataUrl:media[i].data
-   },"gasMediaFrame"+i);
-   await new Promise(r=>setTimeout(r,1300));
+  // V29: upload 2 foto per batch. Lebih cepat, tetapi server memakai LockService
+  // agar update Sheet tidak saling menimpa.
+  let sent=0;
+  for(let i=0;i<media.length;i+=2){
+   const batch=media.slice(i,i+2);
+   b.textContent="4/6 Upload foto "+Math.min(sent+batch.length,media.length)+"/"+media.length;
+   batch.forEach((m,j)=>{
+    hiddenPost_({
+     action:"upload_media",
+     inspectionId:inspectionId,
+     kind:m.kind,
+     index:m.index,
+     dataUrl:m.data
+    },"gasMediaFrame"+(i+j));
+   });
+   sent+=batch.length;
+   await new Promise(r=>setTimeout(r,1700));
   }
 
-  // Tahap 3: tanda tangan dikirim terpisah.
+  // TTD hanya 2 file, aman dikirim bersamaan.
   b.textContent="5/6 Upload tanda tangan...";
-  for(let i=0;i<sigs.length;i++){
-   if(!sigs[i].image) continue;
+  sigs.forEach((s,i)=>{
+   if(!s.image) return;
    hiddenPost_({
     action:"upload_signature",
     inspectionId:inspectionId,
-    tipe:sigs[i].tipe,
-    nama:sigs[i].nama||"",
-    jabatan:sigs[i].jabatan||"",
-    dataUrl:sigs[i].image
+    tipe:s.tipe,
+    nama:s.nama||"",
+    jabatan:s.jabatan||"",
+    dataUrl:s.image
    },"gasSigFrame"+i);
-   await new Promise(r=>setTimeout(r,1200));
-  }
+  });
 
-  // Beri server waktu menyelesaikan media, lalu kirim PDF terakhir.
-  await new Promise(r=>setTimeout(r,3500));
-  b.textContent="6/6 Upload PDF...";
+  // Tunggu batch terakhir selesai lalu PDF dikirim sebagai finalizer/audit.
+  await new Promise(r=>setTimeout(r,4500));
+  b.textContent="6/6 Finalisasi PDF & audit...";
   hiddenPost_({
    action:"upload_pdf",
    inspectionId:inspectionId,
    pdfBase64:pdfBase64,
-   pdfFilename:pdfName
+   pdfFilename:pdfName,
+   expectedVisual:visual.length,
+   expectedCorrective:corrective.length
   },"gasPdfFrame");
 
   await new Promise(r=>setTimeout(r,7000));
