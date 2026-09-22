@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>V31 - Inspeksi Valve Jargas Fast Mobile</title>
+<title>V32 - Inspeksi Valve Jargas PDF + Excel</title>
 <style>
 *{box-sizing:border-box}body{margin:0;background:#eef1f4;font-family:Arial,sans-serif;color:#111}
 .page{max-width:1200px;margin:16px auto;background:#fff;padding:16px;box-shadow:0 1px 8px #bbb}
@@ -281,6 +281,7 @@ align-items:center;justify-content:center;margin-right:6px;font-size:14px;line-h
 #report.pdf-mode .corp-head .doc-no{font-size:6.5px}
 </style>
 
+<script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
 </head>
 <body><div class="page">
 <div class="editor">
@@ -306,7 +307,7 @@ align-items:center;justify-content:center;margin-right:6px;font-size:14px;line-h
 </div>
 
 <div class="section"><h3>Pengesahan / Tanda Tangan</h3><div id="sigs" class="sigGrid"></div></div>
-<div class="btns"><button class="btn primary" id="preview">Preview Laporan</button><button class="btn" id="print">Print / Simpan PDF (A4 Portrait)</button><button class="btn" onclick="location.reload()">Reset</button></div>
+<div class="btns"><button class="btn primary" id="preview">Preview Laporan</button><button class="btn" id="excel">Preview / Simpan Excel (.xlsx)</button><button class="btn" id="print">Print / Simpan PDF (A4 Portrait)</button><button class="btn" onclick="location.reload()">Reset</button></div>
 <p class="small">Mode simulasi lokal V12. Laporan dibagi 2 halaman seperti format Excel: checklist dan dokumentasi.</p>
 </div>
 <div id="report" class="report"><div class="report-page"></div></div>
@@ -409,6 +410,54 @@ function build(){
 document.getElementById("preview").onclick=build;document.getElementById("print").onclick=()=>{build();setTimeout(()=>window.print(),150)};
 </script>
 <script>
+
+async function blobToDataURL_(blob){return await new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result);r.onerror=rej;r.readAsDataURL(blob)})}
+async function urlToData_(url){const r=await fetch(url,{cache:"no-store"});return await blobToDataURL_(await r.blob())}
+function xb_(){return {top:{style:"thin"},left:{style:"thin"},bottom:{style:"thin"},right:{style:"thin"}}}
+function xc_(ws,a,v,o={}){const c=ws.getCell(a);c.value=v??"";c.font={name:"Arial",size:o.size||9,bold:!!o.bold};c.alignment={vertical:"middle",horizontal:o.align||"left",wrapText:true};c.border=xb_();if(o.fill)c.fill={type:"pattern",pattern:"solid",fgColor:{argb:o.fill}};return c}
+async function buildExcelBlob_(){
+ if(!window.ExcelJS)throw new Error("Library Excel belum termuat. Pastikan internet aktif lalu refresh.");
+ const wb=new ExcelJS.Workbook();wb.creator="PT. PGAS SOLUTION";
+ let li=null,ri=null;
+ try{li=wb.addImage({base64:await urlToData_("./logo-pertamina-gas-negara.png"),extension:"png"});ri=wb.addImage({base64:await urlToData_("./logo-pgn-solution.png"),extension:"png"})}catch(e){}
+ function base(name,title){
+  const ws=wb.addWorksheet(name,{pageSetup:{paperSize:9,orientation:"portrait",fitToPage:true,fitToWidth:1,fitToHeight:1,margins:{left:.2,right:.2,top:.25,bottom:.25,header:.1,footer:.1}}});
+  ws.views=[{showGridLines:false}];[5,18,15,13,13,13,14,14,14,14,22].forEach((w,i)=>ws.getColumn(i+1).width=w);
+  ws.mergeCells("A1:B4");ws.mergeCells("C1:I1");ws.mergeCells("C2:I2");ws.mergeCells("C3:I3");ws.mergeCells("C4:I4");ws.mergeCells("J1:K4");ws.mergeCells("A5:K5");
+  xc_(ws,"C1","PT. PGAS SOLUTION",{bold:true,size:11,align:"center"});xc_(ws,"C2",title,{bold:true,size:13,align:"center"});
+  xc_(ws,"C3","PEKERJAAN PENGELOLAAN ASET JARGAS TAHUN 2026",{size:10,align:"center"});xc_(ws,"C4","AREA LAMPUNG",{bold:true,size:10,align:"center"});
+  xc_(ws,"A5","No : "+(V("formno")||"I-GEN-104-2019/F.01."),{bold:true,size:8,align:"right"});
+  if(li!==null)ws.addImage(li,{tl:{col:.15,row:.25},ext:{width:125,height:46}});if(ri!==null)ws.addImage(ri,{tl:{col:9.05,row:.35},ext:{width:125,height:40}});
+  return ws
+ }
+ const ws=base("Form Inspeksi","FORM INSPEKSI VISUAL BALL VALVE");
+ const ids=[["Regional",V("regional"),"Nama Aset",V("asset")],["Area",V("area"),"Aset ID",V("assetid")],["Segment/Section",V("segment"),"Tanggal",V("date")],["No. Form",V("formno"),"Petugas",V("inspector")]];
+ let r=6;ids.forEach(x=>{ws.mergeCells(`B${r}:E${r}`);ws.mergeCells(`G${r}:K${r}`);xc_(ws,`A${r}`,x[0],{bold:true});xc_(ws,`B${r}`,x[1]);xc_(ws,`F${r}`,x[2],{bold:true});xc_(ws,`G${r}`,x[3]);r++});
+ ws.mergeCells(`A${r}:A${r+1}`);ws.mergeCells(`B${r}:B${r+1}`);ws.mergeCells(`C${r}:C${r+1}`);ws.mergeCells(`D${r}:F${r}`);ws.mergeCells(`G${r}:J${r}`);ws.mergeCells(`K${r}:K${r+1}`);
+ [["A","No"],["B","Item"],["C","Pemeriksaan"],["D","Kondisi / Checklist"],["G","Correction Action / Checklist"],["K","Keterangan"]].forEach(x=>xc_(ws,x[0]+r,x[1],{bold:true,align:"center",fill:"FFD9EAF7"}));
+ ["D","E","F"].forEach((c,i)=>xc_(ws,c+(r+1),["Pilihan 1","Pilihan 2","Pilihan 3"][i],{bold:true,align:"center",fill:"FFEAF2F8"}));
+ ["G","H","I","J"].forEach((c,i)=>xc_(ws,c+(r+1),acts[i],{bold:true,align:"center",fill:"FFEAF2F8"}));r+=2;
+ let last="";
+ [...document.querySelectorAll("#body tr")].forEach(tr=>{
+  const item=tr.dataset.item||"",first=item!==last;if(first)last=item;const cs=[...tr.querySelectorAll(".cond")],ac=[...tr.querySelectorAll(".act")];
+  const vals=[first?(tr.dataset.no||""):"",first?item:"",tr.dataset.test||"",...[0,1,2].map(i=>cs[i]?(cs[i].checked?"✓ ":"")+cs[i].value:""),...ac.map(x=>(x.checked?"✓ ":"")+x.value),tr.querySelector(".remark").value||""];
+  vals.forEach((v,i)=>xc_(ws,String.fromCharCode(65+i)+r,v,{align:i===0?"center":"left"}));ws.getRow(r).height=27;r++;
+ });
+ ws.mergeCells(`A${r}:K${r}`);xc_(ws,`A${r}`,"Catatan",{bold:true,fill:"FFD9EAF7"});r++;ws.mergeCells(`A${r}:K${r+2}`);xc_(ws,`A${r}`,V("notes"));r+=3;
+ const sigs=[...document.querySelectorAll("#sigs .sig")];
+ [["A","E",0,.4],["G","K",1,6.4]].forEach(([s,e,i,col])=>{ws.mergeCells(`${s}${r}:${e}${r}`);xc_(ws,`${s}${r}`,i===0?"Disiapkan":"Disetujui",{bold:true,align:"center",fill:"FFD9EAF7"});ws.mergeCells(`${s}${r+1}:${e}${r+1}`);xc_(ws,`${s}${r+1}`,"Nama: "+(sigs[i]?.querySelector(".sn")?.value||""));ws.mergeCells(`${s}${r+2}:${e}${r+2}`);xc_(ws,`${s}${r+2}`,"Jabatan: "+(sigs[i]?.querySelector(".sj")?.value||""));ws.mergeCells(`${s}${r+3}:${e}${r+6}`);xc_(ws,`${s}${r+3}`,"");try{const d=sigs[i]?.querySelector("canvas")?.toDataURL("image/png");if(d){const id=wb.addImage({base64:d,extension:"png"});ws.addImage(id,{tl:{col:col,row:r+2.2},ext:{width:180,height:65}})}}catch(e){}});
+ const wd=base("Dokumentasi","FORM DOKUMENTASI PEMELIHARAAN VALVE");let dr=6;
+ for(const [title,sel] of [["Visual Inspection","#photos"],["Corrective Action","#correctivePhotos"]]){
+  wd.mergeCells(`A${dr}:K${dr}`);xc_(wd,`A${dr}`,title,{bold:true,size:10,fill:"FFD9EAF7"});dr++;
+  const ph=[...document.querySelectorAll(sel+" .photo")].filter(d=>d.querySelector(".pi")?.src);
+  if(!ph.length){wd.mergeCells(`A${dr}:K${dr+3}`);xc_(wd,`A${dr}`,"Belum ada foto",{align:"center"});dr+=4}
+  else for(let i=0;i<ph.length;i+=2){wd.mergeCells(`A${dr}:E${dr+7}`);wd.mergeCells(`G${dr}:K${dr+7}`);[0,1].forEach(j=>{const d=ph[i+j];if(!d)return;try{const id=wb.addImage({base64:d.querySelector(".pi").src,extension:"jpeg"});wd.addImage(id,{tl:{col:j===0?.25:6.25,row:dr-.65},ext:{width:250,height:145}})}catch(e){}});dr+=8}
+ }
+ wd.mergeCells(`A${dr}:K${dr}`);xc_(wd,`A${dr}`,"Catatan",{bold:true,fill:"FFD9EAF7"});dr++;wd.mergeCells(`A${dr}:K${dr+2}`);xc_(wd,`A${dr}`,V("notes"));
+ return new Blob([await wb.xlsx.writeBuffer()],{type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"})
+}
+async function saveExcelLocal_(){try{const b=await buildExcelBlob_(),a=document.createElement("a");a.href=URL.createObjectURL(b);a.download="LAPORAN_INSPEKSI_"+(V("assetid")||"VALVE")+"_"+(V("date")||"").replaceAll("-","")+".xlsx";a.click();setTimeout(()=>URL.revokeObjectURL(a.href),3000)}catch(e){alert("Excel gagal dibuat:\\n"+e.message)}}
+window.addEventListener("DOMContentLoaded",()=>{const e=document.getElementById("excel");if(e)e.onclick=saveExcelLocal_});
 const API_URL="https://script.google.com/macros/s/AKfycbya0mXXhEIQw8xZQ8p97ExZi7fj-aafTRF5Rw457FV5R_QzQ1eF7kTbQu5obk_wzAxV4Q/exec";
 
 function compressDataUrl(src,maxSide=1200,quality=.72){
@@ -591,6 +640,9 @@ async function saveOnline(){
   if(!window.jspdf) throw new Error("jsPDF tidak aktif");
 
   const pdfBase64=await generatePreviewPdf_();
+  b.textContent="2/7 Membuat Excel...";
+  const excelBlob=await buildExcelBlob_();
+  const excelBase64=await blobToDataURL_(excelBlob);
   if(!pdfBase64 || !pdfBase64.startsWith("data:application/pdf"))
     throw new Error("Hasil PDF tidak valid");
 
@@ -617,7 +669,7 @@ async function saveOnline(){
   meta.signatures=sigs.map(s=>({tipe:s.tipe,nama:s.nama,jabatan:s.jabatan,image:""}));
 
   // Tahap 1: metadata ringan -> row + folder langsung dibuat.
-  b.textContent="3/6 Membuat inspeksi...";
+  b.textContent="3/7 Membuat inspeksi...";
   hiddenPost_(meta,"gasMetaFrame");
   await waitServer_(inspectionId,r=>String(r.status||"").length>0,30000,500);
 
@@ -634,7 +686,7 @@ async function saveOnline(){
   let sent=0;
   for(let i=0;i<media.length;i+=2){
    const batch=media.slice(i,i+2);
-   b.textContent="4/6 Upload foto "+Math.min(sent+batch.length,media.length)+"/"+media.length;
+   b.textContent="4/7 Upload foto "+Math.min(sent+batch.length,media.length)+"/"+media.length;
    batch.forEach((m,j)=>{
     hiddenPost_({
      action:"upload_media",
@@ -649,7 +701,7 @@ async function saveOnline(){
   }
 
   // TTD hanya 2 file, aman dikirim bersamaan.
-  b.textContent="5/6 Upload tanda tangan...";
+  b.textContent="5/7 Upload tanda tangan...";
   sigs.forEach((s,i)=>{
    if(!s.image) return;
    hiddenPost_({
@@ -664,10 +716,12 @@ async function saveOnline(){
 
   // Beri waktu singkat untuk dua tanda tangan; foto sudah dikonfirmasi server per batch.
   await new Promise(r=>setTimeout(r,900));
-  b.textContent="6/6 Upload PDF...";
+  b.textContent="6/7 Upload PDF...";
   hiddenPost_({action:"upload_pdf",inspectionId:inspectionId,pdfBase64:pdfBase64,pdfFilename:pdfName},"gasPdfFrame");
   await waitServer_(inspectionId,r=>String(r.status||"").includes("FINALISASI") && !!r.pdfUrl,45000,650);
-
+  b.textContent="7/7 Upload Excel...";
+  hiddenPost_({action:"upload_excel",inspectionId:inspectionId,excelBase64:excelBase64,excelFilename:"LAPORAN_"+inspectionId+".xlsx"},"gasExcelFrame");
+  await waitServer_(inspectionId,r=>!!r.excelUrl,45000,650);
   b.textContent="Finalisasi server...";
   hiddenPost_({action:"finalize",inspectionId:inspectionId,expectedVisual:visual.length,expectedCorrective:corrective.length},"gasFinalizeFrame");
 
