@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>V32.7 - INSVEK | Inspeksi Valve Jargas</title>
+<title>V32.7.1 - INSVEK | Inspeksi Valve Jargas</title>
 <style>
 *{box-sizing:border-box}body{margin:0;background:#eef1f4;font-family:Arial,sans-serif;color:#111}
 .page{max-width:1200px;margin:16px auto;background:#fff;padding:16px;box-shadow:0 1px 8px #bbb}
@@ -153,6 +153,20 @@ align-items:center;justify-content:center;margin-right:6px;font-size:14px;line-h
     min-width:0 !important;
     width:100% !important;
     table-layout:fixed !important;
+  }
+
+  /* V32.7.1 - TTD Print Fix */
+  #report .sigGrid {
+    display:grid !important;
+    grid-template-columns:minmax(0,1fr) minmax(0,1fr) !important;
+    gap:5px !important;
+    width:100% !important;
+  }
+  #report .sig {
+    width:auto !important;
+    min-width:0 !important;
+    break-inside:avoid !important;
+    page-break-inside:avoid !important;
   }
 }
 </style>
