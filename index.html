@@ -93,6 +93,70 @@ align-items:center;justify-content:center;margin-right:6px;font-size:14px;line-h
   .page2 .sig img{max-height:45px!important}
 }
 </style>
+
+<style>
+/* V32.6 - Mobile Print Fix
+   Paksa Android/Chrome mencetak report sebagai A4 Portrait 210x297 mm.
+   Hanya memengaruhi PRINT; preview layar dan generator Excel tidak diubah. */
+@page {
+  size: 210mm 297mm !important;
+  margin: 5mm !important;
+}
+@media print {
+  html, body {
+    width: 210mm !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #fff !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  body > .page {
+    width: 200mm !important;
+    max-width: 200mm !important;
+    margin: 0 auto !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+  }
+  .editor, .btns, .small { display:none !important; }
+  #report {
+    display:block !important;
+    width:200mm !important;
+    min-width:200mm !important;
+    max-width:200mm !important;
+    margin:0 !important;
+    padding:0 !important;
+    overflow:visible !important;
+  }
+  #report .report-page {
+    display:block !important;
+    position:relative !important;
+    width:200mm !important;
+    min-width:200mm !important;
+    max-width:200mm !important;
+    height:287mm !important;
+    min-height:287mm !important;
+    max-height:287mm !important;
+    margin:0 !important;
+    padding:0 !important;
+    overflow:hidden !important;
+    page-break-inside:avoid !important;
+    break-inside:avoid-page !important;
+    page-break-after:always !important;
+    break-after:page !important;
+  }
+  #report .report-page:last-child {
+    page-break-after:auto !important;
+    break-after:auto !important;
+  }
+  #report .form {
+    min-width:0 !important;
+    width:100% !important;
+    table-layout:fixed !important;
+  }
+}
+</style>
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
@@ -407,7 +471,12 @@ function build(){
  document.getElementById("report").classList.add("active");
  document.getElementById("report").scrollIntoView({behavior:"smooth"});
 }
-document.getElementById("preview").onclick=build;document.getElementById("print").onclick=()=>{build();setTimeout(()=>window.print(),150)};
+document.getElementById("preview").onclick=build;
+document.getElementById("print").onclick=()=>{
+  build();
+  document.documentElement.classList.add("mobile-print-ready");
+  setTimeout(()=>window.print(),500);
+};
 </script>
 <script>
 
