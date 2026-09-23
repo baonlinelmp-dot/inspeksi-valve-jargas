@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>V32 - Inspeksi Valve Jargas PDF + Excel</title>
+<title>V32.7 - INSVEK | Inspeksi Valve Jargas</title>
 <style>
 *{box-sizing:border-box}body{margin:0;background:#eef1f4;font-family:Arial,sans-serif;color:#111}
 .page{max-width:1200px;margin:16px auto;background:#fff;padding:16px;box-shadow:0 1px 8px #bbb}
@@ -746,7 +746,7 @@ async function saveOnline(){
  b.disabled=true;
  try{
   // V28: PDF tetap dibuat dulu seperti V26 yang sudah stabil.
-  b.textContent="1/6 Membuat PDF...";
+  b.textContent="1/7 Membuat PDF...";
   if(typeof html2canvas==="undefined") throw new Error("html2canvas tidak aktif");
   if(!window.jspdf) throw new Error("jsPDF tidak aktif");
 
@@ -765,7 +765,7 @@ async function saveOnline(){
   const pdfName="LAPORAN_"+(V("assetid")||V("asset")||inspectionId)+"_"+(V("date")||"").replaceAll("-","")+".pdf";
 
   // Ambil semua data seperti V26, tetapi media akan dikirim satu per satu.
-  b.textContent="2/6 Menyiapkan data...";
+  b.textContent="3/7 Menyiapkan data...";
   const full=await collectOnlineData();
 
   const visual=full.photos||[];
@@ -780,7 +780,7 @@ async function saveOnline(){
   meta.signatures=sigs.map(s=>({tipe:s.tipe,nama:s.nama,jabatan:s.jabatan,image:""}));
 
   // Tahap 1: metadata ringan -> row + folder langsung dibuat.
-  b.textContent="3/7 Membuat inspeksi...";
+  b.textContent="4/7 Membuat inspeksi...";
   hiddenPost_(meta,"gasMetaFrame");
   await waitServer_(inspectionId,r=>String(r.status||"").length>0,30000,500);
 
@@ -797,7 +797,7 @@ async function saveOnline(){
   let sent=0;
   for(let i=0;i<media.length;i+=2){
    const batch=media.slice(i,i+2);
-   b.textContent="4/7 Upload foto "+Math.min(sent+batch.length,media.length)+"/"+media.length;
+   b.textContent="5/7 Upload foto "+Math.min(sent+batch.length,media.length)+"/"+media.length;
    batch.forEach((m,j)=>{
     hiddenPost_({
      action:"upload_media",
@@ -812,7 +812,7 @@ async function saveOnline(){
   }
 
   // TTD hanya 2 file, aman dikirim bersamaan.
-  b.textContent="5/7 Upload tanda tangan...";
+  b.textContent="6/7 Upload tanda tangan...";
   sigs.forEach((s,i)=>{
    if(!s.image) return;
    hiddenPost_({
@@ -827,13 +827,13 @@ async function saveOnline(){
 
   // Beri waktu singkat untuk dua tanda tangan; foto sudah dikonfirmasi server per batch.
   await new Promise(r=>setTimeout(r,900));
-  b.textContent="6/7 Upload PDF...";
+  b.textContent="7/9 Upload PDF...";
   hiddenPost_({action:"upload_pdf",inspectionId:inspectionId,pdfBase64:pdfBase64,pdfFilename:pdfName},"gasPdfFrame");
   await waitServer_(inspectionId,r=>String(r.status||"").includes("FINALISASI") && !!r.pdfUrl,45000,650);
-  b.textContent="7/7 Upload Excel...";
+  b.textContent="8/9 Upload Excel...";
   hiddenPost_({action:"upload_excel",inspectionId:inspectionId,excelBase64:excelBase64,excelFilename:"LAPORAN_"+inspectionId+".xlsx"},"gasExcelFrame");
   await waitServer_(inspectionId,r=>!!r.excelUrl,45000,650);
-  b.textContent="Finalisasi server...";
+  b.textContent="9/9 Finalisasi server...";
   hiddenPost_({action:"finalize",inspectionId:inspectionId,expectedVisual:visual.length,expectedCorrective:corrective.length},"gasFinalizeFrame");
 
   const final=await waitFinalStatus_(inspectionId,b);
@@ -854,7 +854,7 @@ window.addEventListener("DOMContentLoaded",()=>{
  const p=document.getElementById("preview"); if(!p)return;
  const old=document.getElementById("saveOnline"); if(old) old.remove();
  const b=document.createElement("button");
- b.id="saveOnline";b.type="button";b.textContent="Simpan Online + PDF";
+ b.id="saveOnline";b.type="button";b.textContent="Simpan Online + PDF + Excel";
  b.style.marginLeft="8px";b.onclick=saveOnline;
  p.insertAdjacentElement("afterend",b);
 });
@@ -872,7 +872,7 @@ if ('serviceWorker' in navigator) {
 window.addEventListener('load', async ()=>{
   try{
     if('serviceWorker' in navigator){
-      const reg=await navigator.serviceWorker.register('./sw.js?v=313');
+      const reg=await navigator.serviceWorker.register('./sw.js?v=327');
       await reg.update();
     }
   }catch(e){}
